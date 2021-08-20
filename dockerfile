@@ -21,9 +21,10 @@
 # # Install rtree and geopandas
 # RUN pip install rtree geopandas
 
-FROM ubuntu:18.04
+#FROM ubuntu:18.04
+FROM osgeo/gdal:ubuntu-small-latest
 
-LABEL maintainer="msasso@cpqd.com.br"
+LABEL maintainer="matheus.sasso17@gmail.com"
 
 # Install some basic utilities
 RUN apt-get update && apt-get install -y \
@@ -41,6 +42,7 @@ RUN apt-get update && apt-get install -y \
     mercurial \
     pepperflashplugin-nonfree \
     libffi-dev \
+    wget \
  && rm -rf /var/lib/apt/lists/*
 
 # Create a working directory
@@ -66,9 +68,39 @@ RUN curl -sLo ~/miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-py38
  && conda install -y python==3.8.1 \
  && conda clean -ya
 
+## GDAL required pre installs
+#RUN sudo apt-get update 
+#RUN sudo apt-get upgrade -y
+#RUN sudo apt-get install -y software-properties-common
+#RUN sudo apt-get install build-essential
+#RUN sudo add-apt-repository ppa:ubuntugis/ppa && sudo apt-get update -y
+#RUN sudo apt-get install gdal-bin -y
+#RUN sudo apt-get install libgdal-dev -y
+#ENV export CPLUS_INCLUDE_PATH=/usr/include/gdal
+#ENV export C_INCLUDE_PATH=/usr/include/gdal
+#RUN pip install GDAL
+
+# # RUN sudo apt-get install build-essential python-all-dev
+# # RUN sudo wget http://download.osgeo.org/gdal/2.2.2/gdal-2.2.2.tar.gz
+# # RUN sudo tar xvfz gdal-2.2.2.tar.gz
+# # WORKDIR gdal-2.2.2 
+# # RUN ./configure --with-python
+# # RUN make
+# # RUN make install
+# # RUN cd ..
+
+## Rasterio required pre installs
+# RUN sudo add-apt-repository ppa:ubuntugis/ppa \
+# && sudo apt-get update \
+# && sudo apt-get install python-numpy gdal-bin libgdal-dev
+
 #installing requirements
+
+COPY ./setup.py /app/setup.py
 COPY ./requirements.txt /app/requirements.txt
 RUN pip install -r /app/requirements.txt
+
+RUN easy_install gdal
 
 #Exposing Ports
 EXPOSE 8080

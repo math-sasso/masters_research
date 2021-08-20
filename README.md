@@ -52,6 +52,8 @@ Project Organization
     └── tox.ini            <- tox file with settings for running tox; see tox.readthedocs.io
 
 
+### Atualizar repositório para esse formato 
+https://github.com/crmne/cookiecutter-modern-datascience
 
 ### Rodando container
 
