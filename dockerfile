@@ -1,30 +1,10 @@
-# FROM python:3.6
-# LABEL maintainer="matheus.sasso17@gmail.com"
-
-# # Install the C compiler tools
-# RUN apt-get update -y && \
-#   apt-get install build-essential -y && \
-#   pip install --upgrade pip
-
-# # Install libspatialindex
-# WORKDIR /tmp
-# RUN wget http://download.osgeo.org/libspatialindex/spatialindex-src-1.8.5.tar.gz && \
-#   tar -xvzf spatialindex-src-1.8.5.tar.gz && \
-#   cd spatialindex-src-1.8.5 && \
-#   ./configure && \
-#   make && \
-#   make install && \
-#   cd - && \
-#   rm -rf spatialindex-src-1.8.5* && \
-#   ldconfig
-
-# # Install rtree and geopandas
-# RUN pip install rtree geopandas
-
-#FROM ubuntu:18.04
-FROM osgeo/gdal:ubuntu-small-latest
+FROM ubuntu:18.04
 
 LABEL maintainer="matheus.sasso17@gmail.com"
+
+####################################################################
+#                       Install Linux Dependencies
+####################################################################
 
 # Install some basic utilities
 RUN apt-get update && apt-get install -y \
@@ -44,6 +24,11 @@ RUN apt-get update && apt-get install -y \
     libffi-dev \
     wget \
  && rm -rf /var/lib/apt/lists/*
+####################################################################
+
+####################################################################
+#                       Install Python
+####################################################################
 
 # Create a working directory
 WORKDIR /app/
@@ -68,47 +53,51 @@ RUN curl -sLo ~/miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-py38
  && conda install -y python==3.8.1 \
  && conda clean -ya
 
-## GDAL required pre installs
-#RUN sudo apt-get update 
-#RUN sudo apt-get upgrade -y
-#RUN sudo apt-get install -y software-properties-common
-#RUN sudo apt-get install build-essential
-#RUN sudo add-apt-repository ppa:ubuntugis/ppa && sudo apt-get update -y
-#RUN sudo apt-get install gdal-bin -y
-#RUN sudo apt-get install libgdal-dev -y
-#ENV export CPLUS_INCLUDE_PATH=/usr/include/gdal
-#ENV export C_INCLUDE_PATH=/usr/include/gdal
-#RUN pip install GDAL
+####################################################################
 
-# # RUN sudo apt-get install build-essential python-all-dev
-# # RUN sudo wget http://download.osgeo.org/gdal/2.2.2/gdal-2.2.2.tar.gz
-# # RUN sudo tar xvfz gdal-2.2.2.tar.gz
-# # WORKDIR gdal-2.2.2 
-# # RUN ./configure --with-python
-# # RUN make
-# # RUN make install
-# # RUN cd ..
 
-## Rasterio required pre installs
-# RUN sudo add-apt-repository ppa:ubuntugis/ppa \
-# && sudo apt-get update \
-# && sudo apt-get install python-numpy gdal-bin libgdal-dev
+####################################################################
+#                       Install Poetry
+####################################################################
 
-#installing requirements
+USER root
+
+ENV PATH=/usr/local/bin:$PATH \
+    PYTHONUNBUFFERED=TRUE \
+    PYTHONDONTWRITEBYTECODE=TRUE \
+    WORKSPACE_TMP="/app/reports" \
+    POETRY_VERSION=1.1.11
+
+# hadolint ignore=DL3008
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    && pip install --no-cache-dir "poetry==$POETRY_VERSION" \
+    && rm -r /var/lib/apt/lists/* \
+    && mkdir -p /app
 
 COPY ./setup.py /app/setup.py
-COPY ./requirements.txt /app/requirements.txt
-RUN pip install -r /app/requirements.txt
+COPY ./poetry.lock /app/poetry.lock
+COPY ./pyproject.toml /app/pyproject.toml
 
-RUN easy_install gdal
+ARG ENVIRON="production"
+
+# # hadolint ignore=SC2046
+RUN poetry config virtualenvs.create false \
+    && poetry install \
+        $(if [ "$ENVIRON" = 'production' ]; then echo '--no-dev'; fi) \
+        --no-interaction --no-ansi
+
+####################################################################
+
+####################################################################
+#                       Final Configs
+####################################################################
 
 #Exposing Ports
 EXPOSE 8080
 EXPOSE 6006
 
-USER root
-
 # Entrypoint
 ENTRYPOINT ["/bin/bash"]
 CMD []
+####################################################################
 

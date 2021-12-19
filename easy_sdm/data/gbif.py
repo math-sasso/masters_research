@@ -2,13 +2,6 @@ import os
 import requests
 import pandas as pd
 import numpy as np
-from matplotlib import rcParams
-rcParams['font.family'] = 'sans-serif'
-rcParams['font.sans-serif'] = ['Arial']
-import matplotlib.pyplot as plt
-from typing import Tuple
-
-from osgeo import ogr
 import geopandas as gpd
 
 # import requests

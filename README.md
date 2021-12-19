@@ -1,4 +1,4 @@
-Permapy
+# easy_sdm
 ==============================
 
 Species distribuition modelling for highly used plants in agricultural systems
@@ -58,14 +58,14 @@ https://github.com/crmne/cookiecutter-modern-datascience
 ### Rodando container
 
 ```bash
-sudo docker build -t permapy -f dockerfile .
-sudo docker run -it  -p 8080:8080  --name permapy -v $(pwd):/app permapy
+sudo docker build -t easy_sdm -f dockerfile .
+sudo docker run -it --rm -p 8080:8080  --name easy_sdm -v $(pwd):/app easy_sdm
 ```
 
 Entrar em um container que já está rodando. Pode acontecer quando se perde a conexão
 
 ```bash
-sudo docker exec -it permapy bash
+sudo docker exec -it easy_sdm bash
 ```
 ### Subindo a FAST API
 

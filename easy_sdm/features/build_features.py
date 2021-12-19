@@ -1,13 +1,13 @@
-from typing import List,Tuple
 import gc
-from sklearn.utils import Bunch
+from typing import List, Tuple
+
 import geopandas as gpd
-import rasterio
 import numpy as np
-from rasterio.plot import show
-from rasterio.windows import Window
-from osgeo import gdal
+import rasterio
 from matplotlib import pyplot
+from osgeo import gdal
+from sklearn.utils import Bunch
+
 
 class RasterInformationCollector(object):
     """
