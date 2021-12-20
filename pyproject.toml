@@ -17,6 +17,8 @@ pygbif = "^0.6.0"
 rasterio = "^1.2.10"
 natsort = "^8.0.2"
 PyYAML = "^6.0"
+typer = "^0.4.0"
+fastapi = "^0.70.1"
 
 [tool.poetry.dev-dependencies]
 bumpver = "^2021.1113"

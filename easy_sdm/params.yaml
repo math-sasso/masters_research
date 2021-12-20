@@ -1,3 +1,25 @@
-brazil_limits:  (-73.981934,-34.792929, -33.750035, 5.271478)
-no_data_val: -9999.0
-default_epsg: 4326
+maps:
+  brazil_limits:  
+      west: -73.981934
+      east: -34.792929
+      south: -33.750035
+      north: 5.271478
+  brazil_limits_with_security:  
+      west: -74.981934
+      east: -33.792929
+      south: -34.750035
+      north: 6.271478
+  no_data_val: -9999.0
+  default_epsg: 4326
+
+mask:
+  positive_mask_val: 255
+  negative_mask_val: 0
+
+gbif:
+  one_request_limit: 300
+  has_coordinate: True
+  low_year: 2000
+  up_year: 2021
+  drop_duplicates: True
+  try_override_species_data: True

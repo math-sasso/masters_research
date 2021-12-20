@@ -1,0 +1,5 @@
+TODO: Verify if all the rasters are in the same scale (maybe I will need to downlaod it again)
+TODO: GDAL -> Rasterio
+        - Class Brazil -> Check if points iniside polygon
+        - create_base_raster
+        - get_df_only_with_inside_country_points . Possible solution: https://stackoverflow.com/questions/36399381/whats-the-fastest-way-of-checking-if-a-point-is-inside-a-polygon-in-python
