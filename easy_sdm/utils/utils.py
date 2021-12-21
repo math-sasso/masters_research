@@ -14,21 +14,21 @@ class PathUtils:
         pass
 
     @classmethod
-    def file_path(string):
+    def file_path(csl,string):
         if Path(string).is_file():
             return Path(string)
         else:
             raise FileNotFoundError(string)
         
     @classmethod
-    def file_path_existis(string):
+    def file_path_existis(csl,string):
         if Path(string).is_file():
-            return FileExistsError(string)
+            raise FileExistsError()
         else:
             return Path(string)
             
     @classmethod
-    def dir_path(string):
+    def dir_path(csl,string):
         if Path(string).is_dir():
             return Path(string)
         else:
@@ -36,21 +36,24 @@ class PathUtils:
     
 
     @classmethod
-    def list_rasters_in_folder(cls, rasters_root_folders_list):
-        list_raster_files = []
-        list_names_raster = []
+    def get_rasters_in_folder(cls, root_dir):
+        list_filepaths = []
+        list_filenames = []
+        list_varnames = []
 
-        for raster_root_folder in rasters_root_folders_list:
-            for _, _, files in os.walk(raster_root_folder):  # root ,dirs, files
-                for file in files:
-                    if file.endswith(".tif") and "mask" not in file:
-                        list_raster_files.append(raster_root_folder + "/" + file)
-                        name = file.replace(".tif", "")
-                        list_names_raster.append(name)
-        return {
-            "list_raster_files": list_raster_files,
-            "list_names_raster": list_names_raster,
-        }
+        for root, dirs, files in os.walk(root_dir):  # root ,dirs, files
+            
+            for file in files:
+                if file.endswith(".tif") and "mask" not in file:
+                    list_filepaths.append(Path(root) / file)
+                    list_filenames.append(file)
+                    name = file.replace(".tif", "")
+                    list_varnames.append(name)
+        return zip(
+            list_filepaths,
+            list_filenames,
+            list_varnames
+        )
 
 
 class FileUtils(object):

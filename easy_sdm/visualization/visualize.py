@@ -1,10 +1,18 @@
 import os
+import rasterio
 
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+class RastePLotter():
+    def __init__(self) -> None:
+        ...
+    def plot(self,raster_path:str,cmap:str = 'pink'):
+        src = rasterio.open(raster_path)
+        plt.imshow(src.read(1), cmap=cmap)
+        plt.show()
 
 class MetricsPlotter(object):
     
