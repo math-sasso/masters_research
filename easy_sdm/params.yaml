@@ -1,10 +1,10 @@
 maps:
-  brazil_limits:  
+  brazil_limits:
       west: -73.981934
       east: -34.792929
       south: -33.750035
       north: 5.271478
-  brazil_limits_with_security:  
+  brazil_limits_with_security:
       west: -74.981934
       east: -33.792929
       south: -34.750035
@@ -23,3 +23,4 @@ gbif:
   up_year: 2021
   drop_duplicates: True
   try_override_species_data: True
+  country: "BR"

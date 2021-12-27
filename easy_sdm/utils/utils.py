@@ -1,12 +1,27 @@
 import json
 import os
+from functools import wraps
 from pathlib import Path
 from pickle import dump as dump_pickle
 from pickle import load as read_pickle
+from time import process_time
 from typing import List
 
 import numpy as np
 import pandas as pd
+
+
+def timeit(func):
+    @wraps(func)
+    def _time_it(*args, **kwargs):
+        start = int(round(process_time() * 1000))
+        try:
+            return func(*args, **kwargs)
+        finally:
+            end_ = int(round(process_time() * 1000)) - start
+            print(f"Total execution time {func.__name__}: {end_ if end_ > 0 else 0} ms")
+
+    return _time_it
 
 
 class PathUtils:
@@ -14,26 +29,25 @@ class PathUtils:
         pass
 
     @classmethod
-    def file_path(csl,string):
+    def file_path(csl, string):
         if Path(string).is_file():
             return Path(string)
         else:
             raise FileNotFoundError(string)
-        
+
     @classmethod
-    def file_path_existis(csl,string):
+    def file_path_existis(csl, string):
         if Path(string).is_file():
             raise FileExistsError()
         else:
             return Path(string)
-            
+
     @classmethod
-    def dir_path(csl,string):
+    def dir_path(csl, string):
         if Path(string).is_dir():
             return Path(string)
         else:
             raise NotADirectoryError(string)
-    
 
     @classmethod
     def get_rasters_in_folder(cls, root_dir):
@@ -42,18 +56,14 @@ class PathUtils:
         list_varnames = []
 
         for root, dirs, files in os.walk(root_dir):  # root ,dirs, files
-            
+
             for file in files:
                 if file.endswith(".tif") and "mask" not in file:
                     list_filepaths.append(Path(root) / file)
                     list_filenames.append(file)
                     name = file.replace(".tif", "")
                     list_varnames.append(name)
-        return zip(
-            list_filepaths,
-            list_filenames,
-            list_varnames
-        )
+        return zip(list_filepaths, list_filenames, list_varnames)
 
 
 class FileUtils(object):

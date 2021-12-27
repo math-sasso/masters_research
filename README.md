@@ -52,7 +52,7 @@ Project Organization
     └── tox.ini            <- tox file with settings for running tox; see tox.readthedocs.io
 
 
-### Atualizar repositório para esse formato 
+### Atualizar repositório para esse formato
 https://github.com/crmne/cookiecutter-modern-datascience
 
 ### Rodando container
@@ -72,7 +72,7 @@ sudo docker exec -it easy_sdm bash
 ```bash
 uvicorn api:app --port=8080 --host="0.0.0.0" --reload
 ```
-### Fazendo chamada 
+### Fazendo chamada
 No diretório root chamar o arquivo a rodar como modulo da seguinte forma
 
 ```bash
@@ -80,7 +80,7 @@ python3 -m vident.document_reader.inference
 ```
 
 ### Testando as APIs
-Se estiver dentro do container, tem que expor a porta 8080 
+Se estiver dentro do container, tem que expor a porta 8080
 
 API de inferência
 ```bash

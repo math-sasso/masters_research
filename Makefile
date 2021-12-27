@@ -1,10 +1,10 @@
-project-packages=size_profile_ml
-project-name=size_profile_ml
+project-packages=easy_sdm
+project-name=easy_sdm
 project-minimum-coverage=65.0
 time-stamp=$(shell date"+%Y-%m-%d-%H%M%S")
 WORKSPACE_TMP=reports
 DOCKER_IMAGE_NAME=${project-name}
-DOCKERFILE=docker/Dockerfile
+DOCKERFILE=dockerfile
 ENVIRON=production
 
 .DEFAULT_GOAL = help

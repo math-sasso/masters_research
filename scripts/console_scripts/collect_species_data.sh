@@ -1,0 +1,1 @@
+python3 easy_sdm/console.py save_specie -i 5290052 -n "Zea mysa" -s data/raw/shapefiles_brasil/level_0/BRA_adm0.shp
