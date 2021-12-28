@@ -8,6 +8,7 @@ Species distribuition modelling for highly used plants in agricultural systems
 ```bash
 sudo docker build -t easy_sdm -f dockerfile .
 sudo docker run -it --rm -p 8080:8080  --name easy_sdm -v $(pwd):/app easy_sdm
+sudo docker run -it --rm --name easy_sdm -v $(pwd):/app easy_sdm
 ```
 ###  Entering in a running container
 ```bash

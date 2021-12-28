@@ -3,21 +3,11 @@ from typing import Optional
 
 import typer
 
-from data.data_loader import RasterLoader, ShapefileLoader
-from data.raster_data import RasterCliper, RasterShapefileBurner
-from data.shapefile_data import ShapefileRegion
-from data.species_data import Species, SpeciesGDFBuilder
-from data_colector import standarize_rasters, collect_species_data
+from easy_sdm.data.shapefile_data import ShapefileRegion
+from easy_sdm.data_colector import standarize_rasters, collect_species_data
 from utils.utils import PathUtils
 
 app = typer.Typer()
-
-raster_loader = RasterLoader()
-shapefile_loader = ShapefileLoader()
-raster_cliper = RasterCliper()
-shp_region = ShapefileRegion(
-    Path.cwd() / "data/raw/shapefiles_brasil/level_0/BRA_adm0.shp"
-)
 
 
 @app.command("standarize-raster")
@@ -26,7 +16,9 @@ def standarize_rasters_console(
     destination_dirpath: Path = typer.Option(..., "--destination-dirpath", "-d"),
 ):
 
-    import pdb;pdb.set_trace()
+    import pdb
+
+    pdb.set_trace()
     standarize_rasters(
         source_dirpath=source_dirpath, destination_dirpath=destination_dirpath,
     )
@@ -40,7 +32,7 @@ def save_specie(
         ..., "--shapefile-region_delimiter-path", "-s"
     ),
 ):
-    destination_dirpath = Path.cwd() / "data/species_data"
+    destination_dirpath = Path.cwd() / "data/species_data/occurances"
     shp_region = ShapefileRegion(Path.cwd() / shapefile_region_delimiter_path)
     collect_species_data(
         species_id=species_id,
@@ -82,7 +74,7 @@ def save_milpa_species(
     }
 
     shp_region = ShapefileRegion(Path.cwd() / shapefile_region_delimiter_path)
-    destination_dirpath = Path.cwd() / "data/species_data"
+    destination_dirpath = Path.cwd() / "data/species_data/occurances"
     for species_name, species_id in species_dir.items():
 
         collect_species_data(

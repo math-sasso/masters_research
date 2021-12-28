@@ -86,6 +86,9 @@ RUN poetry config virtualenvs.create false \
         $(if [ "$ENVIRON" = 'production' ]; then echo '--no-dev'; fi) \
         --no-interaction --no-ansi
 
+# Installing Pytest and pytest cov
+RUN pip install pytest
+RUN pip install pytest-cov
 ####################################################################
 
 ####################################################################

@@ -3,31 +3,29 @@ from pathlib import Path
 import geopandas as gpd
 import numpy as np
 import rasterio
-from configs import configs
+from easy_sdm.configs import configs
 from rasterio import features
 from rasterio.warp import Resampling, calculate_default_transform, reproject
 
-class RasterInfoExtractor(object):
 
-    def __init__(self,raster:rasterio.io.DatasetReader):
+class RasterInfoExtractor(object):
+    def __init__(self, raster: rasterio.io.DatasetReader):
         self.configs = configs
         self.__raster_array = self.__extrac_array(raster)
         self.__meta = self.__extract_meta(raster)
 
-    def __extrac_array(self,raster:rasterio.io.DatasetReader):
+    def __extrac_array(self, raster: rasterio.io.DatasetReader):
         self.__one_layer_verifier(raster)
         raster_array = raster.read(1)
         return raster_array
 
-    def __one_layer_verifier(raster:rasterio.io.DatasetReader):
+    def __one_layer_verifier(self, raster: rasterio.io.DatasetReader):
         if raster.meta["count"] > 1:
-            raise Exception(
-                "Raster images are suppose to have only one layer"
-            )
+            raise Exception("Raster images are suppose to have only one layer")
         elif raster.meta["count"] == 0:
             raise Exception("For some reason this raster is empty")
 
-    def __extract_meta(self,raster:rasterio.io.DatasetReader):
+    def __extract_meta(self, raster: rasterio.io.DatasetReader):
         return raster.meta
 
     def get_array(self):
@@ -59,16 +57,18 @@ class RasterInfoExtractor(object):
 
     def get_xgrid(self):
         xgrid = np.arange(
-            self.configs['maps']['brazil_limits_with_security']['west'],
-            self.configs['maps']['brazil_limits_with_security']['west'] + self.__raster_array.shape[1] * self.get_resolution(),
+            self.configs["maps"]["brazil_limits_with_security"]["west"],
+            self.configs["maps"]["brazil_limits_with_security"]["west"]
+            + self.__raster_array.shape[1] * self.get_resolution(),
             self.get_resolution(),
         )
         return xgrid
 
     def get_ygrid(self):
         ygrid = np.arange(
-            configs['maps']['brazil_limits_with_security']['south'],
-            configs['maps']['brazil_limits_with_security']['south'] + self.__raster_array.shape[0] * self.get_resolution(),
+            configs["maps"]["brazil_limits_with_security"]["south"],
+            configs["maps"]["brazil_limits_with_security"]["south"]
+            + self.__raster_array.shape[0] * self.get_resolution(),
             self.get_resolution(),
         )
         return ygrid
@@ -80,6 +80,7 @@ class RasterInfoExtractor(object):
     def get_ycenter(self):
         ygrid = self.get_ygrid()
         return np.mean(ygrid)
+
 
 class RasterCliper:
     def __init__(self):
@@ -166,6 +167,7 @@ class RasterCliper:
         with rasterio.open(output_path, "w", **result_profile) as dst:
             dst.write(cropped_raster_matrix, 1)
 
+
 class RasterShapefileBurner:
     def __init__(self, reference_raster: rasterio.io.DatasetReader):
         meta = reference_raster.meta.copy()
@@ -187,13 +189,13 @@ class RasterShapefileBurner:
             shapes = ((geom, 0) for geom in shapfile.geometry)
 
             burned = rasterio.features.rasterize(
-                shapes=shapes, fill=0, out=out_arr, transform=out.transform
+                shapes=shapes, fill=0, out=out_arr,all_touched=True, transform=out.transform
             )
 
             out.write_band(1, burned)
 
 
-class RasterStandarizer():
+class RasterStandarizer:
     def __init__(self) -> None:
         raise NotImplementedError("Not implemented yet")
 
@@ -210,11 +212,11 @@ class RasterStandarizer():
             raise ValueError("%s isn't a file!" % file_path)
 
 
-class RasterValuesStandarizer():
+class RasterValuesStandarizer:
     def __init__(self) -> None:
         raise NotImplementedError("Not implemented yet")
 
-    def __set_to_float32(self,profile,cropped_data):
+    def __set_to_float32(self, profile, cropped_data):
         if profile["dtype"] != np.float32:
             # data = data.astype(rasterio.float32)
             cropped_data = np.float32(cropped_data)
@@ -222,7 +224,7 @@ class RasterValuesStandarizer():
 
         return profile, cropped_data
 
-    def __set_no_data_val(self,profile, cropped_data):
+    def __set_no_data_val(self, profile, cropped_data):
         if profile["nodata"] != configs["maps"]["no_data_val"]:
             cropped_data = np.where(
                 cropped_data < configs["maps"]["no_data_val"],
@@ -232,6 +234,7 @@ class RasterValuesStandarizer():
             profile["nodata"] = configs["maps"]["no_data_val"]
 
         return profile, cropped_data
+
 
 class RasterCRSStandarizer:
     def __init__(self) -> None:

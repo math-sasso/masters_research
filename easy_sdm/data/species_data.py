@@ -2,18 +2,18 @@ import os
 from typing import Dict
 
 from abc import ABC
-from data.shapefile_data import ShapefileRegion
+from easy_sdm.data import ShapefileRegion
 import geopandas as gpd
 import numpy as np
 import pandas as pd
 import requests
-from configs import configs
-from utils import logger
+from easy_sdm.configs import configs
+from easy_sdm.utils import logger
 from typing import Dict, Optional
 from pathlib import Path
 
 
-class GBIFOcuurencesssRequester:
+class GBIFOccurencesRequester:
     def __init__(self, taxon_key: int, species_name: str):
 
         self.taxon_key = taxon_key
@@ -54,7 +54,6 @@ class GBIFOcuurencesssRequester:
 
         return r, end_of_records, status_code
 
-
 class Species:
     def __init__(self, taxon_key: int, name: str):
         self.taxon_key = taxon_key
@@ -66,7 +65,7 @@ class Species:
 
 class SpeciesDFBuilder:
     def __init__(self, species: Species):
-        self.gbif_occ_requester = GBIFOcuurencesssRequester(
+        self.gbif_occ_requester = GBIFOccurencesRequester(
             species.taxon_key, species.name
         )
         self.__df_memory = None
@@ -186,7 +185,7 @@ class SpeciesDFBuilder:
 
 
 class SpeciesGDFBuilder(SpeciesDFBuilder):
-    def __init__(self, species: Species, proposed_region: Optional[ShapefileRegion]):
+    def __init__(self, species: Species, proposed_region: Optional[ShapefileRegion] = None):
         super().__init__(species)
         self.proposed_region = proposed_region
         self.__gdf_memory = None
@@ -199,7 +198,7 @@ class SpeciesGDFBuilder(SpeciesDFBuilder):
         gdf.to_file(output_path)
 
     def get_species_gdf(self):
-        if self.__gdf_memory:
+        if not (self.__gdf_memory is None):
             gdf = self.__gdf_memory
         else:
             df = self.get_specie_df()
@@ -207,25 +206,31 @@ class SpeciesGDFBuilder(SpeciesDFBuilder):
                 df, geometry=gpd.points_from_xy(df.LONGITUDE, df.LATITUDE)
             )
             gdf = gdf.set_crs(f"EPSG:{configs['maps']['default_epsg']}")
-            gdf = self.__filter_species_in_region(gdf) if self.proposed_region else gdf
+            gdf = self.__filter_species_in_region(gdf) if not (self.proposed_region is None) else gdf
             self.__gdf_memory = gdf
         return gdf
 
     def __filter_species_in_region(self, gdf: gpd.GeoDataFrame):
         return self.proposed_region.get_points_inside(gdf)
 
-class SpeciesInfoExtractor():
-    def __init__(self,species_geodataframe:gpd.GeoDataFrame) -> None:
+
+class SpeciesInfoExtractor:
+    def __init__(self, species_geodataframe: gpd.GeoDataFrame) -> None:
         self.species_geodataframe = species_geodataframe
 
     def get_coordinates(self,):
-        coordinates = np.array((np.array(self.species_geodataframe["LATITUDE"]), np.array(self.species_geodataframe["LONGITUDE"]))).T
+        coordinates = np.array(
+            (
+                np.array(self.species_geodataframe["LATITUDE"]),
+                np.array(self.species_geodataframe["LONGITUDE"]),
+            )
+        ).T
         return coordinates
 
     def get_longitudes(self,):
-        coordinates = self.__get_coordinates()
+        coordinates = self.get_coordinates()
         return coordinates[:, 1]
 
     def get_latitudes(self,):
-        coordinates = self.__get_coordinates()
+        coordinates = self.get_coordinates()
         return coordinates[:, 0]

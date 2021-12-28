@@ -49,22 +49,41 @@ class PathUtils:
         else:
             raise NotADirectoryError(string)
 
-    @classmethod
-    def get_rasters_in_folder(cls, root_dir):
-        list_filepaths = []
-        list_filenames = []
-        list_varnames = []
 
-        for root, dirs, files in os.walk(root_dir):  # root ,dirs, files
+    @classmethod
+    def get_rasters_filepaths_in_dir(cls, dirpath:Path):
+        list_filepaths = []
+
+        for root, _, files in os.walk(dirpath):  # root ,dirs, files
 
             for file in files:
                 if file.endswith(".tif") and "mask" not in file:
                     list_filepaths.append(Path(root) / file)
+        return list_filepaths
+
+    @classmethod
+    def get_rasters_filenames_in_dir(cls, dirpath:Path):
+        list_filenames = []
+
+        for _, _, files in os.walk(dirpath):  # root ,dirs, files
+
+            for file in files:
+                if file.endswith(".tif") and "mask" not in file:
                     list_filenames.append(file)
+        return  list_filenames
+
+
+    @classmethod
+    def get_rasters_varnames_in_dir(cls, dirpath:Path):
+        list_varnames = []
+
+        for _, _, files in os.walk(dirpath):  # root ,dirs, files
+
+            for file in files:
+                if file.endswith(".tif") and "mask" not in file:
                     name = file.replace(".tif", "")
                     list_varnames.append(name)
-        return zip(list_filepaths, list_filenames, list_varnames)
-
+        return list_varnames
 
 class FileUtils(object):
 
@@ -73,7 +92,7 @@ class FileUtils(object):
     """
 
     def __init__(self):
-        pass
+        raise NotImplementedError("This method is here only for checking. Should not be used")
 
     def read_json(self, filepath: str):
         with open(filepath) as f:
