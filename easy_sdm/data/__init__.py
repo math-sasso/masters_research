@@ -6,6 +6,7 @@ from easy_sdm.data.raster_data import (
     RasterCRSStandarizer,
     RasterStandarizer,
     RasterValuesStandarizer,
+    SoilgridsDownloader
 )
 from easy_sdm.data.shapefile_data import ShapefileRegion
 from easy_sdm.data.species_data import (
@@ -32,4 +33,5 @@ __all__ = [
     "SpeciesDFBuilder",
     "SpeciesGDFBuilder",
     "SpeciesInfoExtractor",
+    "SoilgridsDownloader"
 ]

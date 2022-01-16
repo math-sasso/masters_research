@@ -14,6 +14,9 @@ from pathlib import Path
 
 
 class GBIFOccurencesRequester:
+    """[This class makes request to GBIF]
+    """
+
     def __init__(self, taxon_key: int, species_name: str):
 
         self.taxon_key = taxon_key
@@ -54,6 +57,7 @@ class GBIFOccurencesRequester:
 
         return r, end_of_records, status_code
 
+
 class Species:
     def __init__(self, taxon_key: int, name: str):
         self.taxon_key = taxon_key
@@ -64,6 +68,9 @@ class Species:
 
 
 class SpeciesDFBuilder:
+    """[This class organize data requested to GBIF into pandas dataframes]
+    """
+
     def __init__(self, species: Species):
         self.gbif_occ_requester = GBIFOccurencesRequester(
             species.taxon_key, species.name
@@ -185,7 +192,12 @@ class SpeciesDFBuilder:
 
 
 class SpeciesGDFBuilder(SpeciesDFBuilder):
-    def __init__(self, species: Species, proposed_region: Optional[ShapefileRegion] = None):
+    """[This class organize data requested to GBIF into geopandas geodataframes]
+    """
+
+    def __init__(
+        self, species: Species, proposed_region: Optional[ShapefileRegion] = None
+    ):
         super().__init__(species)
         self.proposed_region = proposed_region
         self.__gdf_memory = None
@@ -206,7 +218,11 @@ class SpeciesGDFBuilder(SpeciesDFBuilder):
                 df, geometry=gpd.points_from_xy(df.LONGITUDE, df.LATITUDE)
             )
             gdf = gdf.set_crs(f"EPSG:{configs['maps']['default_epsg']}")
-            gdf = self.__filter_species_in_region(gdf) if not (self.proposed_region is None) else gdf
+            gdf = (
+                self.__filter_species_in_region(gdf)
+                if not (self.proposed_region is None)
+                else gdf
+            )
             self.__gdf_memory = gdf
         return gdf
 
@@ -215,6 +231,9 @@ class SpeciesGDFBuilder(SpeciesDFBuilder):
 
 
 class SpeciesInfoExtractor:
+    """[A Wrapper to extract relevant information from spescies geodataframes]
+    """
+
     def __init__(self, species_geodataframe: gpd.GeoDataFrame) -> None:
         self.species_geodataframe = species_geodataframe
 

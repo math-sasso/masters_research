@@ -8,8 +8,8 @@ import numpy as np
 import pandas as pd
 import rasterio
 from easy_sdm.configs import configs
-from easy_sdm.data import (RasterInfoExtractor, RasterLoader,
-                           SpeciesInfoExtractor)
+from easy_sdm.data import RasterInfoExtractor, RasterLoader, SpeciesInfoExtractor
+
 
 class BasePseudoSpeciesGenerator(ABC):
     def __init__(self) -> None:
@@ -35,7 +35,11 @@ class RSEPPseudoSpeciesGenerator(BasePseudoSpeciesGenerator):
     def generate(self):
         pass
 
+
 class SpeciesEnveriomentExtractor:
+    """[This class extracts species information trought a set of raster layers that represent enverionmental conditions]
+    """
+
     def __init__(self):
         self.configs = configs
 
@@ -202,6 +206,9 @@ class SpeciesEnveriomentExtractor:
 
 
 class EnverionmentLayersStacker:
+    """[Create a 3D array from 2D arrays stacked]
+    """
+
     def __init__(self, raster_path_list: List[Path]) -> None:
         self.raster_path_list = raster_path_list
 
@@ -232,7 +239,10 @@ class EnverionmentLayersStacker:
         return coverage
 
 
-class DatasetCreator:
+class SDMDatasetCreator:
+    """[Create a dataset with species and pseudo spescies for SDM Machine Learning]
+    """
+
     def __init__(
         self, raster_path_list: List[Path], ps_generator: BasePseudoSpeciesGenerator
     ) -> None:
@@ -291,8 +301,7 @@ class OccurrancesDatasetBuilder(BaseDatasetBuilder):
         self.species_env_extractor = SpeciesEnveriomentExtractor()
 
     def build(
-        self,
-        species_gdf: gpd.GeoDataFrame,
+        self, species_gdf: gpd.GeoDataFrame,
     ):
         """Save all extracted to a numpy array"""
 

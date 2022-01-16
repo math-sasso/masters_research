@@ -1,5 +1,6 @@
 from pathlib import Path
-
+from turtle import width
+import rasterio
 import geopandas as gpd
 
 from easy_sdm.data import (
@@ -10,6 +11,7 @@ from easy_sdm.data import (
     ShapefileRegion,
     Species,
     SpeciesGDFBuilder,
+    SoilgridsDownloader
 )
 from easy_sdm.utils import PathUtils
 
@@ -17,6 +19,37 @@ shp_region = ShapefileRegion(
     Path.cwd() / "data/raw/shapefiles_brasil/level_0/BRA_adm0.shp"
 )
 
+
+def download_soigrids_all_rasters(coverage_filter:str):
+    variables = [
+        "wrb",
+        "cec",
+        "clay",
+        "phh2o",
+        "silt",
+        "ocs",
+        "bdod",
+        "cfvo",
+        "nitrogen",
+        "sand",
+        "soc",
+        "ocd",
+    ]
+
+    for variable in variables:
+        download_soilgrods_one_raster(variable,coverage_filter)
+
+def download_soilgrods_one_raster(variable:str,coverage_filter:str):
+    raster_path = Path.cwd() / "data" / "processed_rasters" / "standarized_rasters" / "bio1_annual_mean_temperature.tif"
+    # referennce_raster = rasterio.open(raster_path)
+    # width,height = referennce_raster.shape # 4923,4942
+    soilgrids_downloader = SoilgridsDownloader(raster_path)
+    soilgrids_downloader.set_soilgrids_requester(variable=variable)
+    coverages = soilgrids_downloader.get_coverage_list()
+    for cov in coverages:
+        if coverage_filter in cov:
+            soilgrids_downloader.download(coverage_type=cov)
+    #filtered_coverages = [cov for cov in coverages if coverage_filter in cov]
 
 def standarize_rasters(source_dirpath: str, destination_dirpath: str):
 

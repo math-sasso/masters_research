@@ -1,5 +1,7 @@
 import json
 import os
+import time
+from pathlib import Path
 from functools import wraps
 from pathlib import Path
 from pickle import dump as dump_pickle
@@ -28,6 +30,14 @@ class PathUtils:
     def __init__(self):
         pass
 
+
+    @classmethod
+    def create_folder(cls,dirpath:Path):
+        p = Path(dirpath)
+        p.mkdir(parents=True, exist_ok=True)
+        while not dirpath.is_dir():
+            time.sleep(1)
+
     @classmethod
     def file_path(csl, string):
         if Path(string).is_file():
@@ -49,9 +59,8 @@ class PathUtils:
         else:
             raise NotADirectoryError(string)
 
-
     @classmethod
-    def get_rasters_filepaths_in_dir(cls, dirpath:Path):
+    def get_rasters_filepaths_in_dir(cls, dirpath: Path):
         list_filepaths = []
 
         for root, _, files in os.walk(dirpath):  # root ,dirs, files
@@ -62,7 +71,7 @@ class PathUtils:
         return list_filepaths
 
     @classmethod
-    def get_rasters_filenames_in_dir(cls, dirpath:Path):
+    def get_rasters_filenames_in_dir(cls, dirpath: Path):
         list_filenames = []
 
         for _, _, files in os.walk(dirpath):  # root ,dirs, files
@@ -70,11 +79,10 @@ class PathUtils:
             for file in files:
                 if file.endswith(".tif") and "mask" not in file:
                     list_filenames.append(file)
-        return  list_filenames
-
+        return list_filenames
 
     @classmethod
-    def get_rasters_varnames_in_dir(cls, dirpath:Path):
+    def get_rasters_varnames_in_dir(cls, dirpath: Path):
         list_varnames = []
 
         for _, _, files in os.walk(dirpath):  # root ,dirs, files
@@ -85,6 +93,7 @@ class PathUtils:
                     list_varnames.append(name)
         return list_varnames
 
+
 class FileUtils(object):
 
     """
@@ -92,7 +101,9 @@ class FileUtils(object):
     """
 
     def __init__(self):
-        raise NotImplementedError("This method is here only for checking. Should not be used")
+        raise NotImplementedError(
+            "This method is here only for checking. Should not be used"
+        )
 
     def read_json(self, filepath: str):
         with open(filepath) as f:

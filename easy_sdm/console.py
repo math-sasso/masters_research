@@ -4,11 +4,20 @@ from typing import Optional
 import typer
 
 from easy_sdm.data.shapefile_data import ShapefileRegion
-from easy_sdm.data_colector import standarize_rasters, collect_species_data
+from easy_sdm.data_colector import standarize_rasters, collect_species_data,download_soilgrods_one_raster,download_soigrids_all_rasters
 from utils.utils import PathUtils
 
 app = typer.Typer()
 
+@app.command("download-soilgrids-one-rasters")
+def download_soilgrids_one_rasters(
+    variable: str = typer.Option(..., "--variable", "-v"),
+    coverage_filter: str = typer.Option(..., "--coverage-filter", "-f"),
+):
+
+    download_soilgrods_one_raster(
+        variable=variable, coverage_filter=coverage_filter,
+    )
 
 @app.command("standarize-raster")
 def standarize_rasters_console(
@@ -16,15 +25,12 @@ def standarize_rasters_console(
     destination_dirpath: Path = typer.Option(..., "--destination-dirpath", "-d"),
 ):
 
-    import pdb
-
-    pdb.set_trace()
     standarize_rasters(
         source_dirpath=source_dirpath, destination_dirpath=destination_dirpath,
     )
 
 
-@app.command("save_specie")
+@app.command("save-specie")
 def save_specie(
     species_id: int = typer.Option(..., "--species-id", "-i"),
     species_name: str = typer.Option(..., "--species-name", "-n"),
@@ -42,7 +48,7 @@ def save_specie(
     )
 
 
-@app.command("save_milpa_species")
+@app.command("save-milpa-species")
 def save_milpa_species(
     shapefile_region_delimiter_path: Path = typer.Option(
         ..., "--shapefile-region_delimiter-path", "-s"

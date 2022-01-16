@@ -502,6 +502,21 @@ optional = false
 python-versions = ">=3.7,<3.11"
 
 [[package]]
+name = "owslib"
+version = "0.25.0"
+description = "OGC Web Service utility library"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+pyproj = ">=2"
+python-dateutil = ">=1.5"
+pytz = "*"
+pyyaml = "*"
+requests = ">=1.0"
+
+[[package]]
 name = "packaging"
 version = "21.3"
 description = "Core utilities for Python packages"
@@ -1062,8 +1077,8 @@ testing = ["coverage (>=4)", "coverage-enable-subprocess (>=1)", "flaky (>=3)", 
 
 [metadata]
 lock-version = "1.1"
-python-versions = "3.8"
-content-hash = "203da7ef0e6c5a2357b86c964837838c8d0fa6f9f6565e82227bb5192a31ea31"
+python-versions = "3.8.8"
+content-hash = "fda0879cbc6bc66883a42b46c36d36e9c43ea69d96901e08a3a0652552c4e497"
 
 [metadata.files]
 affine = [
@@ -1392,6 +1407,10 @@ numpy = [
     {file = "numpy-1.21.4-cp39-cp39-win_amd64.whl", hash = "sha256:e3c3e990274444031482a31280bf48674441e0a5b55ddb168f3a6db3e0c38ec8"},
     {file = "numpy-1.21.4-pp37-pypy37_pp73-manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:a3deb31bc84f2b42584b8c4001c85d1934dbfb4030827110bc36bfd11509b7bf"},
     {file = "numpy-1.21.4.zip", hash = "sha256:e6c76a87633aa3fa16614b61ccedfae45b91df2767cf097aa9c933932a7ed1e0"},
+]
+owslib = [
+    {file = "OWSLib-0.25.0-py2.py3-none-any.whl", hash = "sha256:78cfd1d369d7f225705180de3776f1a69770505b8af2b79728edced85204186f"},
+    {file = "OWSLib-0.25.0.tar.gz", hash = "sha256:20d79bce0be10277caa36f3134826bd0065325df0301a55b2c8b1c338d8d8f0a"},
 ]
 packaging = [
     {file = "packaging-21.3-py3-none-any.whl", hash = "sha256:ef103e05f519cdc783ae24ea4e2e0f508a9c99b2d4969652eed6a2e1ea5bd522"},

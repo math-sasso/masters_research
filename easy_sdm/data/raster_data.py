@@ -1,14 +1,96 @@
 from pathlib import Path
+from urllib import response
 
 import geopandas as gpd
 import numpy as np
 import rasterio
 from easy_sdm.configs import configs
+from easy_sdm.utils import PathUtils
+from easy_sdm.data import RasterLoader
 from rasterio import features
 from rasterio.warp import Resampling, calculate_default_transform, reproject
+from owslib.wcs import WebCoverageService
 
 
-class RasterInfoExtractor(object):
+
+class SoilgridsDownloader:
+    """[summary]
+
+    References:
+    - The soilgrids lib:
+    - The possible soilgrids variables: https://maps.isric.org/
+    """
+
+    def __init__(
+        self,reference_raster_path:Path
+    ) -> None:
+
+        self.reference_raster = RasterLoader(raster_path=reference_raster_path).load_dataset()
+        self.root_dir = Path.cwd() / "data" / "soilgrids_raters"
+        self.soilgrids_requester = None
+        self.variable = None
+        self.configs = configs
+        self.width = self.reference_raster.width
+        self.height = self.reference_raster.height
+
+    def set_soilgrids_requester(self,variable:str):
+        url = f"http://maps.isric.org/mapserv?map=/map/{variable}.map"
+        self.soilgrids_requester = WebCoverageService(url, version='1.0.0')
+        self.variable = variable
+
+    def __check_if_soilgrids_requester(self):
+        if self.soilgrids_requester is None:
+            raise ValueError("Please set soilgrids_requester_before")
+
+    def __build_bbox(self):
+        # check bounding box
+        limits = self.configs["maps"]["brazil_limits_with_security"]
+        if limits["west"] > limits["east"] or limits["south"] > limits["north"]:
+            raise ValueError('Please provide valid bounding box values for west, east, south and north.')
+        else:
+            bbox = (limits["west"], limits["south"], limits["east"], limits["north"])
+        return bbox
+
+    def download(
+        self, coverage_type: str,
+    ):
+        self.__check_if_soilgrids_requester()
+        output_dir = self.root_dir / self.variable
+        PathUtils.create_folder(output_dir)
+        output_path = output_dir / f"{coverage_type}.tif"
+        if not Path(output_path).is_file():
+            crs="urn:ogc:def:crs:EPSG::4326"
+            response = None
+            i = 0
+            while response is None and i<5:
+                try:
+                    response = self.soilgrids_requester.getCoverage(
+                identifier=coverage_type,
+                crs=crs,
+                bbox = self.__build_bbox(),
+                resx=None, resy=None,
+                width=self.width,
+                height=self.height,
+                response_crs = crs,
+                format='GEOTIFF_INT16'
+        ) #bytes
+                    self.__save_raster(response,output_path)
+                except Exception as e:
+                    print(type(e))
+
+            i+=1
+    def __save_raster(self,response,output_path:str):
+        with open(output_path, 'wb') as file:
+            file.write(response.read())
+
+    def get_coverage_list(self):
+        self.__check_if_soilgrids_requester()
+        return list(self.soilgrids_requester.contents)
+
+
+class RasterInfoExtractor:
+    """[A Wrapper to extract relevant information from raster objects]"""
+
     def __init__(self, raster: rasterio.io.DatasetReader):
         self.configs = configs
         self.__raster_array = self.__extrac_array(raster)
@@ -83,6 +165,8 @@ class RasterInfoExtractor(object):
 
 
 class RasterCliper:
+    """[Clip a raster trought a configured square]"""
+
     def __init__(self):
         pass
 
@@ -169,6 +253,8 @@ class RasterCliper:
 
 
 class RasterShapefileBurner:
+    """[Burn a shapefile troought a reference raster. The reference is used only to get the Affine properties]"""
+
     def __init__(self, reference_raster: rasterio.io.DatasetReader):
         meta = reference_raster.meta.copy()
         meta.update(compress="lzw")
@@ -189,13 +275,19 @@ class RasterShapefileBurner:
             shapes = ((geom, 0) for geom in shapfile.geometry)
 
             burned = rasterio.features.rasterize(
-                shapes=shapes, fill=0, out=out_arr,all_touched=True, transform=out.transform
+                shapes=shapes,
+                fill=0,
+                out=out_arr,
+                all_touched=True,
+                transform=out.transform,
             )
 
             out.write_band(1, burned)
 
 
 class RasterStandarizer:
+    """[A class that centralizes all RasterStandarization applications and take control over it]"""
+
     def __init__(self) -> None:
         raise NotImplementedError("Not implemented yet")
 
@@ -213,6 +305,8 @@ class RasterStandarizer:
 
 
 class RasterValuesStandarizer:
+    """[This class standarizes the raster array]"""
+
     def __init__(self) -> None:
         raise NotImplementedError("Not implemented yet")
 
@@ -237,12 +331,14 @@ class RasterValuesStandarizer:
 
 
 class RasterCRSStandarizer:
+    """[This class standarizes CRS (map projections)]"""
+
     def __init__(self) -> None:
         self.configs = configs
         raise NotImplementedError("Not implemented yet")
 
     def reproject_crs(self, input_raster_path: Path, output_raster_path: Path):
-        dst_crs = str(configs["maps"]["default_epsg"])
+        dst_crs = f"EPSG:{str(configs['maps']['default_epsg'])}"
         with rasterio.open(input_raster_path) as src:
             transform, width, height = calculate_default_transform(
                 src.crs, dst_crs, src.width, src.height, *src.bounds
