@@ -1,16 +1,18 @@
 import json
 import os
+import shutil
+import tempfile
 import time
-from pathlib import Path
 from functools import wraps
 from pathlib import Path
 from pickle import dump as dump_pickle
 from pickle import load as read_pickle
 from time import process_time
-from typing import List
+from typing import Dict, List
 
 import numpy as np
 import pandas as pd
+import rasterio
 
 
 def timeit(func):
@@ -26,13 +28,40 @@ def timeit(func):
     return _time_it
 
 
+class RasterUtils:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def save_raster(cls, data: np.ndarray, profile: Dict, output_path: Path):
+
+        with rasterio.open(output_path, "w", **profile) as dst:
+            dst.write(data, 1)
+
+    @classmethod
+    def save_binary_raster(cls, binary_raster: str, output_path: Path):
+
+        with open(output_path, "wb") as file:
+            file.write(binary_raster.read())
+
+class TemporaryDirectory():
+    def __init__(self) -> None:
+        self.name = Path(tempfile.mkdtemp())
+
+    def free(self):
+        shutil.rmtree(self.name)
+
 class PathUtils:
     def __init__(self):
         pass
 
+    @classmethod
+    def get_temp_dir(cls):
+        tempdir = Path(tempfile.mkdtemp())
+        return tempdir
 
     @classmethod
-    def create_folder(cls,dirpath:Path):
+    def create_folder(cls, dirpath: Path):
         p = Path(dirpath)
         p.mkdir(parents=True, exist_ok=True)
         while not dirpath.is_dir():

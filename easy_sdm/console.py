@@ -1,16 +1,31 @@
+from gc import callbacks
 from pathlib import Path
 from typing import Optional
 
 import typer
 
-from easy_sdm.data.shapefile_data import ShapefileRegion
-from easy_sdm.data_colector import standarize_rasters, collect_species_data,download_soilgrods_one_raster,download_soigrids_all_rasters
-from utils.utils import PathUtils
+from easy_sdm.data import ShapefileRegion
+from easy_sdm.data_colector import (
+    standarize_rasters,
+    collect_species_data,
+    download_soilgrods_one_raster,
+    download_soigrids_all_rasters,
+)
 
 app = typer.Typer()
 
+# poetry run python3 easy_sdm/console.py download-soigrids-all-rasters -f mean
+@app.command("download-soigrids-all-rasters")
+def download_soigrids_all(
+    coverage_filter: str = typer.Option(..., "--coverage-filter", "-f"),
+):
+
+    download_soigrids_all_rasters(
+        coverage_filter=coverage_filter,
+    )
+
 @app.command("download-soilgrids-one-rasters")
-def download_soilgrids_one_rasters(
+def download_soilgrids_one(
     variable: str = typer.Option(..., "--variable", "-v"),
     coverage_filter: str = typer.Option(..., "--coverage-filter", "-f"),
 ):
@@ -19,14 +34,24 @@ def download_soilgrids_one_rasters(
         variable=variable, coverage_filter=coverage_filter,
     )
 
+
+def raster_type_callback(value: str):
+    if value not in ['soilgrids','bioclim','elevation','envirem']:
+        typer.echo("raster-type must be one between ['soilgrids','bioclim','elevation','envirem']")
+        raise typer.Exit()
+    return value
+
+
+# poetry run python3 easy_sdm/console.py standarize-raster -s data/raw/rasters/Soilgrids_Rasters -d data/processed_rasters/standarized_rasters/Soilgrids_Rasters -t soilgrids
 @app.command("standarize-raster")
 def standarize_rasters_console(
     source_dirpath: Path = typer.Option(..., "--source-dirpath", "-s"),
     destination_dirpath: Path = typer.Option(..., "--destination-dirpath", "-d"),
+    raster_type: str = typer.Option(..., "--raster-type", "-t",callback=raster_type_callback),
 ):
 
     standarize_rasters(
-        source_dirpath=source_dirpath, destination_dirpath=destination_dirpath,
+        source_dirpath=source_dirpath, destination_dirpath=destination_dirpath, raster_type=raster_type
     )
 
 

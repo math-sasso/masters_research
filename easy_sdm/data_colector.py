@@ -7,11 +7,12 @@ from easy_sdm.data import (
     RasterCliper,
     RasterLoader,
     RasterShapefileBurner,
+    RasterStandarizer,
     ShapefileLoader,
     ShapefileRegion,
     Species,
     SpeciesGDFBuilder,
-    SoilgridsDownloader
+    SoilgridsDownloader,
 )
 from easy_sdm.utils import PathUtils
 
@@ -20,7 +21,7 @@ shp_region = ShapefileRegion(
 )
 
 
-def download_soigrids_all_rasters(coverage_filter:str):
+def download_soigrids_all_rasters(coverage_filter: str):
     variables = [
         "wrb",
         "cec",
@@ -37,32 +38,49 @@ def download_soigrids_all_rasters(coverage_filter:str):
     ]
 
     for variable in variables:
-        download_soilgrods_one_raster(variable,coverage_filter)
+        download_soilgrods_one_raster(variable, coverage_filter)
 
-def download_soilgrods_one_raster(variable:str,coverage_filter:str):
-    raster_path = Path.cwd() / "data" / "processed_rasters" / "standarized_rasters" / "bio1_annual_mean_temperature.tif"
-    # referennce_raster = rasterio.open(raster_path)
-    # width,height = referennce_raster.shape # 4923,4942
-    soilgrids_downloader = SoilgridsDownloader(raster_path)
+
+def download_soilgrods_one_raster(variable: str, coverage_filter: str):
+    reference_raster_path = (
+        Path.cwd()
+        / "data"
+        / "processed_rasters"
+        / "standarized_rasters"
+        / "Bioclim_Rasters"
+        / "bio1_annual_mean_temperature.tif"
+    )
+    root_dir = Path.cwd() / "data" / "raw" / "rasters" / "Soilgrids_Rasters"
+    soilgrids_downloader = SoilgridsDownloader(
+        reference_raster_path=reference_raster_path, root_dir=root_dir
+    )
     soilgrids_downloader.set_soilgrids_requester(variable=variable)
     coverages = soilgrids_downloader.get_coverage_list()
     for cov in coverages:
         if coverage_filter in cov:
             soilgrids_downloader.download(coverage_type=cov)
-    #filtered_coverages = [cov for cov in coverages if coverage_filter in cov]
+    # filtered_coverages = [cov for cov in coverages if coverage_filter in cov]
 
-def standarize_rasters(source_dirpath: str, destination_dirpath: str):
 
+def standarize_rasters(source_dirpath: str, destination_dirpath: str, raster_type: str):
+
+    raster_standarizer = RasterStandarizer()
     for filepath, filename in zip(
         PathUtils.get_rasters_filepaths_in_dir(source_dirpath),
         PathUtils.get_rasters_filenames_in_dir(source_dirpath),
     ):
         try:
-            raster = RasterLoader(filepath).load_dataset()
-            RasterCliper().clip_and_save(
-                source_raster=raster,
-                output_path=PathUtils.file_path_existis(destination_dirpath / filename),
-            )
+            if raster_type in ["bioclim", "elevation", "envirem"]:
+                raster_standarizer.standarize_bioclim_envirem(
+                    input_path=filepath,
+                    output_path=destination_dirpath / filename,
+                )
+            elif raster_type == "soilgrids":
+                raster_standarizer.standarize_soilgrids(
+                    input_path= filepath,
+                    output_path=destination_dirpath / filename,
+                )
+
         except FileExistsError as exc:
             print(str(exc))
             print(f"filepath: {filepath}")

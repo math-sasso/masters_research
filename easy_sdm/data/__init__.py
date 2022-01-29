@@ -1,14 +1,14 @@
 from easy_sdm.data.data_loader import RasterLoader, ShapefileLoader
-from easy_sdm.data.raster_data import (
+from easy_sdm.data.environment_data import (
     RasterInfoExtractor,
     RasterCliper,
     RasterShapefileBurner,
-    RasterCRSStandarizer,
     RasterStandarizer,
-    RasterValuesStandarizer,
-    SoilgridsDownloader
+    RasterDataStandarizer,
+    SoilgridsDownloader,
+    ShapefileRegion
 )
-from easy_sdm.data.shapefile_data import ShapefileRegion
+
 from easy_sdm.data.species_data import (
     Species,
     GBIFOccurencesRequester,
@@ -24,14 +24,13 @@ __all__ = [
     "RasterInfoExtractor",
     "RasterCliper",
     "RasterShapefileBurner",
-    "RasterCRSStandarizer",
     "RasterStandarizer",
-    "RasterValuesStandarizer",
+    "RasterDataStandarizer",
     "ShapefileRegion",
     "Species",
     "GBIFOccurencesRequester",
     "SpeciesDFBuilder",
     "SpeciesGDFBuilder",
     "SpeciesInfoExtractor",
-    "SoilgridsDownloader"
+    "SoilgridsDownloader",
 ]

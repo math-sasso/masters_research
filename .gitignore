@@ -2,6 +2,10 @@
 __pycache__/
 *.py[cod]
 
+# Temporary folders
+.extras/
+extras/
+
 # C extensions
 *.so
 

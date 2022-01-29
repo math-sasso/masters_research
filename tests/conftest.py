@@ -36,7 +36,7 @@ def mock_map_shapefile_path():
 def mock_processed_raster_path():
     path = (
         Path.cwd()
-        / "data/processed_rasters/standarized_rasters/bio1_annual_mean_temperature.tif"
+        / "data/processed_rasters/standarized_rasters/Bioclim_Rasters/bio1_annual_mean_temperature.tif"
     )
     return path
 
@@ -45,6 +45,13 @@ def mock_processed_raster_path():
 def mock_raw_raster_path():
     path = (
         Path.cwd() / "data/raw/rasters/Bioclim_Rasters/bio1_annual_mean_temperature.tif"
+    )
+    return path
+
+@pytest.fixture
+def mock_master_raster_path():
+    path = (
+        Path.cwd() / "data/processed_rasters/others/brazilian_mask.tif"
     )
     return path
 

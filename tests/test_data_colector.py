@@ -7,9 +7,9 @@ from easy_sdm.data_colector import burn_shapefile_in_raster, standarize_rasters
 
 def test_standarize_rasters(tmp_path, raw_rasters_dirpath):
 
-    standarize_rasters(raw_rasters_dirpath, tmp_path)
-    raster1 = tmp_path / "bio1_annual_mean_temperature.tif"
-    raster2 = tmp_path / "envir1_annual_PET.tif"
+    standarize_rasters(source_dirpath=raw_rasters_dirpath / "Elevation_Rasters",destination_dirpath = tmp_path,raster_type='elevation')
+    raster1 = tmp_path / "elev1_strm_worldclim_elevation.tif"
+    raster2 = tmp_path / "elev2_envirem_terrain_roughness_index.tif"
     assert Path(raster1).is_file()
     assert Path(raster2).is_file()
     assert isinstance(RasterLoader(raster1).load_dataset(), rasterio.io.DatasetReader)

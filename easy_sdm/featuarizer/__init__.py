@@ -1,10 +1,13 @@
-from easy_sdm.featuarizer.build_features import (
+from easy_sdm.featuarizer.dataset_builder import (
     BaseDatasetBuilder,
     EnverionmentLayersStacker,
     OccurrancesDatasetBuilder,
     PseudoAbsensesDatasetBuilder,
     SpeciesEnveriomentExtractor,
+    SDMDatasetCreator
 )
+
+from easy_sdm.featuarizer.preprocessing import RasterStatisticsCalculator
 
 __all__ = [
     "DatasetCreator",
@@ -13,4 +16,6 @@ __all__ = [
     "PseudoAbsensesDatasetBuilder",
     "EnverionmentLayersStacker",
     "SpeciesEnveriomentExtractor",
+    "SDMDatasetCreator",
+    "RasterStatisticsCalculator"
 ]

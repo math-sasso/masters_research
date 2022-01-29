@@ -15,7 +15,7 @@ class SDM:
     # OneClassSVMModel
 
     """
-  This class is reponsable for performing fits and predictions for the species ditribution problem using OneClassSVM 
+  This class is reponsable for performing fits and predictions for the species ditribution problem using OneClassSVM
    Attributes
   ----------
   nu : float
@@ -34,7 +34,7 @@ class SDM:
     Utils object
   land_reference : array
     Array used as the land reference
-  
+
   """
 
     def __init__(
@@ -47,7 +47,7 @@ class SDM:
         brazil_vars_mean_std_path: str,
         output_base_folder: str,
     ):
-        """    
+        """
     Parameters
     ----------
     hyperparams : Dict
@@ -58,7 +58,7 @@ class SDM:
         Utils object
     land_reference_path : str
         Path to a raster used as land refence
-       
+
     """
 
         # -------------- hyperparams
@@ -248,3 +248,38 @@ class SDM:
                 "Species_Raster_Data_Test",
             )
             del species_bunch
+
+
+##########
+
+import os
+import numpy as np
+import geopandas as gpd
+from typing import List, Tuple, Dict
+from sklearn import svm, metrics
+from sklearn.preprocessing import MinMaxScaler,StandardScaler
+from sklearn.model_selection import KFold
+import rasterio
+import matplotlib.pyplot as plt
+import pandas as pd
+
+import numpy as np
+class BaseModel():
+    def __init__(self) -> None:
+        pass
+
+    def normalize(self,):
+        pass
+
+    def fit(self, x_train,hyperparams):
+        """ Fitting data with normalized data """
+
+        train_cover_std = (
+            x_train - self.mean_vars
+        ) / self.std_vars
+        train_cover_std[
+            np.isnan(train_cover_std)
+        ] = 0  # Nan values comes from std=0 in some variable
+        clf = svm.OneClassSVM(**hyperparams)
+        clf.fit(train_cover_std)
+        return clf
