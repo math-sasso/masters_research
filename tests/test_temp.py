@@ -27,7 +27,7 @@ def test_statistics_table_generatio(tmp_path,mock_master_raster_path):
     ).build_table(output_path)
 
     df_stats = pd.read_csv(output_path)
-    import pdb;pdb.set_trace()
+    assert df_stats.shape(0) == len(raster_path_list)
 
 
     # def test_sdm_dataset_creator(mock_species_shapefile_path):

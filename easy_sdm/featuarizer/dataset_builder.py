@@ -7,48 +7,20 @@ import geopandas as gpd
 import numpy as np
 import pandas as pd
 import rasterio
-from rasterio.plot import show
-from easy_sdm.visualization import SpeciesInRasterPlotter
 from easy_sdm.configs import configs
 from easy_sdm.data import RasterInfoExtractor, RasterLoader, SpeciesInfoExtractor
-
-class EnverionmentLayersStacker:
-    """[Create a 3D array from 2D arrays stacked]
-    """
-
-    def __init__(self, raster_path_list: List[Path]) -> None:
-        self.raster_path_list = raster_path_list
-
-    def stack_and_save(self, output_path: Path):
-        if not str(output_path).endswith(".npy"):
-            raise TypeError("output_path must ends with .npy")
-
-        coverage = self.stack()
-        with open(output_path, "wb") as f:
-            np.save(f, coverage)
-
-        del coverage
-        gc.collect()
-
-    def stack(self):
-
-        all_env_values_list = []
-        for path in self.raster_path_list:
-            raster = RasterLoader(path).load_dataset()
-            raster_array = RasterInfoExtractor(raster).get_array()
-            all_env_values_list.append(raster_array)
-            del raster
-            del raster_array
-            gc.collect()
-
-        coverage = np.stack(all_env_values_list)
-
-        return coverage
+from easy_sdm.featuarizer import (
+    BasePseudoSpeciesGenerator,
+    MinMaxScalerWrapper,
+    RSEPPseudoSpeciesGenerator,
+    EnverionmentLayersStacker,
+)
+from enums import PseudoSpeciesGeneratorType
+from configs import configs
 
 
 class SpeciesEnveriomentExtractor:
-    """[This class extracts species information trought a set of raster layers that represent enverionmental conditions]
-    """
+    """[This class extracts species information trought a set of raster layers that represent enverionmental conditions]"""
 
     def __init__(self):
         self.configs = configs
@@ -81,7 +53,6 @@ class SpeciesEnveriomentExtractor:
         if self.__raster is None:
             raise ValueError("Call set_env_layer before extract")
 
-
     def __approximate_no_data_pixels(self, raster_occurrences_array: np.ndarray):
         """[Repair problems on points very near to the the country boarders make the point change position in the raster center direction]
 
@@ -110,33 +81,31 @@ class SpeciesEnveriomentExtractor:
             zip(raster_occurrences_array, species_longitudes, species_latitudes)
         ):
 
-            state = 'diagonal'
+            state = "diagonal"
 
             if pixel_value == self.configs["maps"]["no_data_val"]:
                 incx, incy = 0, 0
                 k = 0
                 while pixel_value == self.configs["maps"]["no_data_val"]:
 
-                    if k%50 == 0:
-                        if state == 'diagonal':
-                            state = 'horizontal'
-                        elif state == 'horizontal':
-                            state = 'vertical'
-                        elif state == 'vertical':
-                            state == 'diagonal'
+                    if k % 50 == 0:
+                        if state == "diagonal":
+                            state = "horizontal"
+                        elif state == "horizontal":
+                            state = "vertical"
+                        elif state == "vertical":
+                            state == "diagonal"
 
                     if k == 200:
-                        # SpeciesInRasterPlotter.plot_one_point(raster_array,ix[i],iy[i])
-                        # SpeciesInRasterPlotter.plot_one_point(raster_array,newx_point,newy_point)
                         raise KeyError(
                             "Probably there is problem in the raster once it could not find a valid value"
                         )
                     # walking coodinates in center map
-                    if state == 'diagonal':
+                    if state == "diagonal":
                         if (
-                        long >= self.__raster_info_extractor.get_xcenter()
-                        and lat >= self.__raster_info_extractor.get_ycenter()
-                    ):
+                            long >= self.__raster_info_extractor.get_xcenter()
+                            and lat >= self.__raster_info_extractor.get_ycenter()
+                        ):
                             long -= resolution
                             lat -= resolution
                             incx -= 1
@@ -165,24 +134,20 @@ class SpeciesEnveriomentExtractor:
                             lat -= resolution
                             incx += 1
                             incy -= 1
-                    elif state == 'horizontal':
-
-                        #import pdb;pdb.set_trace()
+                    elif state == "horizontal":
                         if long <= self.__raster_info_extractor.get_xcenter():
                             long += resolution
                             incx += 1
                         else:
                             long -= resolution
                             incx -= 1
-                    elif state == 'vertical':
-                        #import pdb;pdb.set_trace()
+                    elif state == "vertical":
                         if lat <= self.__raster_info_extractor.get_ycenter():
                             lat += resolution
                             incy += 1
                         else:
                             lat -= resolution
                             incy -= 1
-
 
                     newx_point = ix[i] + incx
                     newy_point = iy[i] + incy
@@ -233,43 +198,16 @@ class SpeciesEnveriomentExtractor:
 
         return raster_occurrences_array
 
-class BasePseudoSpeciesGenerator(ABC):
-    def __init__(self) -> None:
-        pass
 
-    @abstractmethod
-    def generate(self):
-        pass
-
-
-class RandomPseudoSpeciesGenerator(BasePseudoSpeciesGenerator):
-    def __init__(self) -> None:
-        raise NotImplementedError("This class is not yet implemented")
-
-    def generate(self):
-        pass
-
-
-class RSEPPseudoSpeciesGenerator(BasePseudoSpeciesGenerator):
-    def __init__(self) -> None:
-        raise NotImplementedError("This class is not yet implemented")
-
-    def generate(self):
-        pass
-
-
-class BaseDatasetBuilder(ABC):
+class OccurrancesDatasetBuilder:
     def __init__(self, raster_path_list: List[Path]):
-        self.raster_path_list = raster_path_list
-
-    @abstractmethod
-    def build(self):
-        pass
+        super().__init__(raster_path_list)
+        self.species_env_extractor = SpeciesEnveriomentExtractor()
 
     def __get_var_names(self):
         return [path.name.split(".")[0] for path in self.raster_path_list]
 
-    def create_df(
+    def __create_df(
         self,
         all_env_values_species_list: List[np.ndarray],
         coordinates: List[np.ndarray],
@@ -287,11 +225,6 @@ class BaseDatasetBuilder(ABC):
         gc.collect()
 
         return df
-
-class OccurrancesDatasetBuilder(BaseDatasetBuilder):
-    def __init__(self, raster_path_list: List[Path]):
-        super().__init__(raster_path_list)
-        self.species_env_extractor = SpeciesEnveriomentExtractor()
 
     def build(
         self, species_gdf: gpd.GeoDataFrame,
@@ -311,50 +244,81 @@ class OccurrancesDatasetBuilder(BaseDatasetBuilder):
             del raster_occurrences_array
             gc.collect()
 
-
-        df = self.create_df(all_env_values_species_list, coordinates)
+        df = self.__create_df(all_env_values_species_list, coordinates)
         df["label"] = 1
         return df
 
 
-class PseudoAbsensesDatasetBuilder(BaseDatasetBuilder):
+class PseudoAbsensesDatasetBuilder:
     def __init__(
-        self, raster_path_list: List[Path], ps_generator: BasePseudoSpeciesGenerator
+        self,
+        ps_generator_type: PseudoSpeciesGeneratorType,
     ):
-        super().__init__(raster_path_list)
-        pass
+        self.ps_generator_type = ps_generator_type
 
-    def build(self):
-        pass
+        self.__define_ps_generator()
+
+    def __define_ps_generator(self):
+
+        region_mask_raster = rasterio.open(
+            Path.cwd() / "data/processed_rasters/others/brazilian_mask.tif"
+        )
+
+        if self.ps_generator_type is PseudoSpeciesGeneratorType.RSEP:
+            hyperparameters = configs["pseudo_species"]["RSEP"]
+            stacked_raster_coverages = EnverionmentLayersStacker.load(
+                Path.cwd() / "data/datasets/environment.npy"
+            )
+            ps_generator = RSEPPseudoSpeciesGenerator(
+                hyperparameters=hyperparameters,
+                region_mask_raster=region_mask_raster,
+                stacked_raster_coverages=stacked_raster_coverages,
+            )
+        elif self.ps_generator_type is PseudoSpeciesGeneratorType.Random:
+            raise NotImplementedError()
+
+        self.ps_generator = ps_generator
+
+    def build(self, occurrence_dataset: pd.DataFrame, number_pseudo_absenses: int):
+        self.ps_generator.fit(occurrence_dataset)
+        pseudo_absenses_df = self.ps_generator.generate(number_pseudo_absenses)
+        return pseudo_absenses_df
 
 
 class SDMDatasetCreator:
-    """[Create a dataset with species and pseudo spescies for SDM Machine Learning]
-    """
+    """[Create a dataset with species and pseudo spescies for SDM Machine Learning]"""
 
     def __init__(
-        self, raster_path_list: List[Path], statistics_dataset: pd.DataFrame
+        self,
+        raster_path_list: List[Path],
+        statistics_dataset: pd.DataFrame,
+        ps_generator_type: PseudoSpeciesGeneratorType,
+        ps_proportion:float,
     ) -> None:
-        # ps_generator: BasePseudoSpeciesGenerator
+        #
         # self.ps_generator = ps_generator
         self.statistics_dataset = statistics_dataset
-        self.occ_dataset_builder = OccurrancesDatasetBuilder(raster_path_list)
+        self.raster_path_list = raster_path_list
+        self.ps_generator_type = ps_generator_type
+        self.ps_proportion = ps_proportion
+        self.__setup()
 
-    def __min_max_scaler(self,df):
-        for (column_name, column_data) in df.iteritems():
-            if column_name !="label":
-                variable_info = self.statistics_dataset.iloc[column_name]
-                import pdb;pdb.set_trace()
-                variable_mean = variable_info['mean'].to_numpy()
-                variable_std = variable_info['std'].to_numpy()
-                column_data_scaled = (column_data.to_numpy() - variable_mean)/variable_std
-                df[column_name] = column_data_scaled
+    def __setup(self):
+        self.occ_dataset_builder = OccurrancesDatasetBuilder(self.raster_path_list)
+        self.min_max_scaler = MinMaxScalerWrapper(
+            raster_path_list=self.raster_path_list,
+            statistics_dataset=self.statistics_dataset,
+        )
 
-        df.reset_index(drop=True, inplace=True)
-        return df
+        self.psa_dataset_builder = PseudoAbsensesDatasetBuilder(self.ps_generator_type)
 
-    def create_dataset(self,species_gdf: gpd.GeoDataFrame):
+    def create_dataset(self, species_gdf: gpd.GeoDataFrame):
         occ_df = self.occ_dataset_builder.build(species_gdf)
-        scaled_occ_df = self.__min_max_scaler(occ_df)
-        import pdb;pdb.set_trace()
-        pass
+        number_pseudo_absenses = len(occ_df) * self.ps_proportion
+        psa_df = self.psa_dataset_builder.build(occurrence_dataset=occ_df,number_pseudo_absenses=number_pseudo_absenses)
+        df = occ_df + psa_df
+        scaled_df = self.min_max_scaler.scale_df(df)
+        import pdb
+
+        pdb.set_trace()
+        return scaled_df

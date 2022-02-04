@@ -44,12 +44,14 @@ class RasterUtils:
         with open(output_path, "wb") as file:
             file.write(binary_raster.read())
 
-class TemporaryDirectory():
+
+class TemporaryDirectory:
     def __init__(self) -> None:
         self.name = Path(tempfile.mkdtemp())
 
     def free(self):
         shutil.rmtree(self.name)
+
 
 class PathUtils:
     def __init__(self):

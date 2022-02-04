@@ -13,7 +13,7 @@ class SpeciesInRasterPlotter:
         plt.clf()
 
     @classmethod
-    def plot_one_point(cls, raster_array, x:float, y:float):
+    def plot_one_point(cls, raster_array, x: float, y: float):
 
         plt.imshow(raster_array, cmap="terrain")
         plt.scatter(x=x, y=raster_array.shape[1] - y, c="r", s=10)

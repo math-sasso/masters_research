@@ -72,13 +72,11 @@ def standarize_rasters(source_dirpath: str, destination_dirpath: str, raster_typ
         try:
             if raster_type in ["bioclim", "elevation", "envirem"]:
                 raster_standarizer.standarize_bioclim_envirem(
-                    input_path=filepath,
-                    output_path=destination_dirpath / filename,
+                    input_path=filepath, output_path=destination_dirpath / filename,
                 )
             elif raster_type == "soilgrids":
                 raster_standarizer.standarize_soilgrids(
-                    input_path= filepath,
-                    output_path=destination_dirpath / filename,
+                    input_path=filepath, output_path=destination_dirpath / filename,
                 )
 
         except FileExistsError as exc:

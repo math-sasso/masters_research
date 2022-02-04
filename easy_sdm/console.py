@@ -20,9 +20,8 @@ def download_soigrids_all(
     coverage_filter: str = typer.Option(..., "--coverage-filter", "-f"),
 ):
 
-    download_soigrids_all_rasters(
-        coverage_filter=coverage_filter,
-    )
+    download_soigrids_all_rasters(coverage_filter=coverage_filter,)
+
 
 @app.command("download-soilgrids-one-rasters")
 def download_soilgrids_one(
@@ -36,8 +35,10 @@ def download_soilgrids_one(
 
 
 def raster_type_callback(value: str):
-    if value not in ['soilgrids','bioclim','elevation','envirem']:
-        typer.echo("raster-type must be one between ['soilgrids','bioclim','elevation','envirem']")
+    if value not in ["soilgrids", "bioclim", "elevation", "envirem"]:
+        typer.echo(
+            "raster-type must be one between ['soilgrids','bioclim','elevation','envirem']"
+        )
         raise typer.Exit()
     return value
 
@@ -47,11 +48,15 @@ def raster_type_callback(value: str):
 def standarize_rasters_console(
     source_dirpath: Path = typer.Option(..., "--source-dirpath", "-s"),
     destination_dirpath: Path = typer.Option(..., "--destination-dirpath", "-d"),
-    raster_type: str = typer.Option(..., "--raster-type", "-t",callback=raster_type_callback),
+    raster_type: str = typer.Option(
+        ..., "--raster-type", "-t", callback=raster_type_callback
+    ),
 ):
 
     standarize_rasters(
-        source_dirpath=source_dirpath, destination_dirpath=destination_dirpath, raster_type=raster_type
+        source_dirpath=source_dirpath,
+        destination_dirpath=destination_dirpath,
+        raster_type=raster_type,
     )
 
 

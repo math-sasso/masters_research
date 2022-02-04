@@ -6,7 +6,7 @@ from easy_sdm.data.environment_data import (
     RasterStandarizer,
     RasterDataStandarizer,
     SoilgridsDownloader,
-    ShapefileRegion
+    ShapefileRegion,
 )
 
 from easy_sdm.data.species_data import (

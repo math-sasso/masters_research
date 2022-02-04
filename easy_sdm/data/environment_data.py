@@ -54,13 +54,12 @@ class SoilgridsDownloader:
         return bbox
 
     def download(
-        self,
-        coverage_type: str,
+        self, coverage_type: str,
     ):
         self.__check_if_soilgrids_requester()
         output_dir = self.root_dir / self.variable
         PathUtils.create_folder(output_dir)
-        coverage_type = coverage_type.replace(".","_")
+        coverage_type = coverage_type.replace(".", "_")
         output_path = output_dir / f"{coverage_type}.tif"
         if not Path(output_path).is_file():
             crs = "urn:ogc:def:crs:EPSG::4326"
@@ -89,6 +88,7 @@ class SoilgridsDownloader:
         self.__check_if_soilgrids_requester()
         return list(self.soilgrids_requester.contents)
 
+
 class RasterInfoExtractor:
     """[A Wrapper to extract relevant information from raster objects]"""
 
@@ -104,9 +104,9 @@ class RasterInfoExtractor:
 
     def __one_layer_verifier(self, raster: rasterio.io.DatasetReader):
         if raster.meta["count"] > 1:
-            raise Exception("Raster images are suppose to have only one layer")
+            raise ValueError("Raster images are suppose to have only one layer")
         elif raster.meta["count"] == 0:
-            raise Exception("For some reason this raster is empty")
+            raise ValueError("For some reason this raster is empty")
 
     def __extract_meta(self, raster: rasterio.io.DatasetReader):
         return raster.meta
@@ -200,6 +200,7 @@ class RasterShapefileBurner:
 
             out.write_band(1, burned)
 
+
 class RasterCliper:
     """
     [Clip a raster trought a configured square]
@@ -212,14 +213,8 @@ class RasterCliper:
     def __get_window_from_extent(self, aff):
         """Get a portion form a raster array based on the country limits"""
         map_limits = configs["maps"]["brazil_limits_with_security"]
-        col_start, row_start = ~aff * (
-            map_limits["west"],
-            map_limits["north"],
-        )
-        col_stop, row_stop = ~aff * (
-            map_limits["east"],
-            map_limits["south"],
-        )
+        col_start, row_start = ~aff * (map_limits["west"], map_limits["north"],)
+        col_stop, row_stop = ~aff * (map_limits["east"], map_limits["south"],)
         return ((int(row_start), int(row_stop)), (int(col_start), int(col_stop)))
 
     def __create_profile(
@@ -272,9 +267,7 @@ class RasterCliper:
 class RasterDataStandarizer:
     """[A class to perform expected standarizations]"""
 
-    def __init__(
-        self,
-    ) -> None:
+    def __init__(self,) -> None:
         self.configs = configs
 
     def standarize(self, raster, output_path: Path):
@@ -283,9 +276,7 @@ class RasterDataStandarizer:
         width, height = data.shape
         data = np.float32(data)
         data = np.where(
-            data == profile["nodata"] ,
-            configs["maps"]["no_data_val"],
-            data,
+            data == profile["nodata"], configs["maps"]["no_data_val"], data,
         )
 
         profile.update(

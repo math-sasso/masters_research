@@ -11,6 +11,18 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 
+class OCSVM:
+    def __init__(self, **hyperparams) -> None:
+        self.hyperparams = hyperparams
+
+    def fit(self, x):
+        self.clf = svm.OneClassSVM(**self.hyperparams)
+        self.clf.fit(x)
+
+    def predict(self, x):
+        return self.clf.decision_function(x)
+
+
 class SDM:
     # OneClassSVMModel
 
@@ -248,38 +260,3 @@ class SDM:
                 "Species_Raster_Data_Test",
             )
             del species_bunch
-
-
-##########
-
-import os
-import numpy as np
-import geopandas as gpd
-from typing import List, Tuple, Dict
-from sklearn import svm, metrics
-from sklearn.preprocessing import MinMaxScaler,StandardScaler
-from sklearn.model_selection import KFold
-import rasterio
-import matplotlib.pyplot as plt
-import pandas as pd
-
-import numpy as np
-class BaseModel():
-    def __init__(self) -> None:
-        pass
-
-    def normalize(self,):
-        pass
-
-    def fit(self, x_train,hyperparams):
-        """ Fitting data with normalized data """
-
-        train_cover_std = (
-            x_train - self.mean_vars
-        ) / self.std_vars
-        train_cover_std[
-            np.isnan(train_cover_std)
-        ] = 0  # Nan values comes from std=0 in some variable
-        clf = svm.OneClassSVM(**hyperparams)
-        clf.fit(train_cover_std)
-        return clf

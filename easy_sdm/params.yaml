@@ -13,8 +13,8 @@ maps:
   default_epsg: 4326
 
 mask:
-  positive_mask_val: 255
-  negative_mask_val: 0
+  positive_mask_val: 0
+  negative_mask_val: -9999
 
 gbif:
   one_request_limit: 300
@@ -24,3 +24,9 @@ gbif:
   drop_duplicates: True
   try_override_species_data: True
   country: "BR"
+
+pseudo_species:
+  RSEP:
+    kernel: 'rbf'
+    gamma: 'scale'
+    nu: 0.5

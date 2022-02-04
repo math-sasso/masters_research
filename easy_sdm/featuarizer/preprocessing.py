@@ -6,6 +6,8 @@ import pandas as pd
 import rasterio
 from easy_sdm.configs import configs
 
+from typing import List
+
 # TODO:  Test this class
 class RasterStatisticsCalculator:
     """[A class to extract basic statistics from rasters considering only the masked territorry]
@@ -17,7 +19,9 @@ class RasterStatisticsCalculator:
         self.configs = configs
         self.raster_path_list = raster_path_list
         self.mask_raster = rasterio.open(mask_raster_path)
-        self.inside_mask_idx = np.where(self.mask_raster.read(1) != configs["maps"]["no_data_val"])
+        self.inside_mask_idx = np.where(
+            self.mask_raster.read(1) != configs["maps"]["no_data_val"]
+        )
 
     def build_table(self, output_path: Path):
         df = pd.DataFrame(
@@ -26,44 +30,27 @@ class RasterStatisticsCalculator:
         for raster_path in self.raster_path_list:
             raster = rasterio.open(raster_path)
             raster_data = raster.read(1)
-            inside_mask_array_1D = raster_data[
+            inside_mask_vec = raster_data[
                 self.inside_mask_idx[1], self.inside_mask_idx[0]
             ]
 
-            import pdb;pdb.set_trace()
-            # data_1D = raster_data.flatten()
-            filtered_data_1D = inside_mask_array_1D[
-                inside_mask_array_1D != configs["maps"]["no_data_val"]
+            filtered_vec = inside_mask_vec[
+                inside_mask_vec != configs["maps"]["no_data_val"]
             ]
 
             df = df.append(
                 {
                     "raster_name": Path(raster_path).name,
-                    "min": np.min(filtered_data_1D),
-                    "max": np.max(filtered_data_1D),
-                    "mean": np.mean(filtered_data_1D),
-                    "std": np.std(filtered_data_1D),
-                    "median": np.median(filtered_data_1D),
+                    "min": np.min(filtered_vec),
+                    "max": np.max(filtered_vec),
+                    "mean": np.mean(filtered_vec),
+                    "std": np.std(filtered_vec),
+                    "median": np.median(filtered_vec),
                 },
                 ignore_index=True,
             )
 
-        df = df.set_index("raster_name")
         df.to_csv(output_path, index=False)
-
-
-class ScaleRasterStack:
-    """[Class to scale values excluding no data values. It is no possible to use default scaler from scikit learning once it is not possible to exclude no data val
-    ]
-    """
-
-    def __init__(self, raster_path_list, statistics_df) -> None:
-        self.configs = configs
-        self.statistics_df = statistics_df
-        self.raster_path_list = raster_path_list
-
-    def min_max_scale():
-        pass
 
 
 # 1 - filtrar o brasil para pegar os minimos e maximos dentro do brasil apenas

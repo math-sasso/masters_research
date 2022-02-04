@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import pandas as pd
 import pytest
 from easy_sdm.utils import PathUtils
 
@@ -49,7 +50,7 @@ def mock_raw_raster_path():
     return path
 
 @pytest.fixture
-def mock_master_raster_path():
+def mock_mask_raster_path():
     path = (
         Path.cwd() / "data/processed_rasters/others/brazilian_mask.tif"
     )
@@ -137,3 +138,22 @@ def mock_raw_raster_dataloader(mock_raw_raster_path):
             return shp
 
     return MockRawRasterLoader()
+
+############################
+#           Special          #
+############################
+
+# O certo seria deixar isso aqui e criar um MockRasterStatisticsCalculator
+@pytest.fixture
+def df_stats(tmp_path, mock_mask_raster_path,processed_raster_paths_list):
+
+    from easy_sdm.featuarizer import RasterStatisticsCalculator
+
+    output_path = tmp_path / "rasters_statistics.csv"
+    RasterStatisticsCalculator(
+        raster_path_list=processed_raster_paths_list, mask_raster_path=mock_mask_raster_path
+    ).build_table(output_path)
+
+    df_stats = pd.read_csv(output_path)
+
+    return df_stats
