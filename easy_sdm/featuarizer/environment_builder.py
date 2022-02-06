@@ -19,8 +19,7 @@ class EnverionmentLayersStacker:
         return np.load(input_path)
 
     def stack_and_save(self, raster_path_list: List[Path], output_path: Path):
-        if not str(output_path).endswith(".npy"):
-            raise TypeError("output_path must ends with .npy")
+        assert str(output_path).endswith(".npy"), "output_path must ends with .npy"
 
         coverage = self.stack(raster_path_list)
         with open(output_path, "wb") as f:

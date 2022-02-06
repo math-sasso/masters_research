@@ -1,3 +1,4 @@
+from calendar import c
 from pathlib import Path
 from typing import List
 
@@ -32,17 +33,13 @@ class MinMaxScalerWrapper:
 
     def scale_df(self, df: pd.DataFrame):
 
-        label = df["label"]
+        label = df["label"].to_numpy()
         df = df.drop("label", axis=1)
         columns = df.columns
         values = df.to_numpy()
         values_scaled = self.__scale(values)
         scaled_df = pd.DataFrame(values_scaled, columns=columns)
         scaled_df["label"] = label
-        # df = df[self.env_var_names]
-        # scaler = MinMaxScaler()
-        # x_columns = df.columns.copy().remove("label")
-        # df[x_columns] = scaler.fit_transform(df[x_columns])
         return scaled_df
 
     def scale_stack(self, stack):

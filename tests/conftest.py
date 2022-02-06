@@ -155,5 +155,5 @@ def df_stats(tmp_path, mock_mask_raster_path,processed_raster_paths_list):
     ).build_table(output_path)
 
     df_stats = pd.read_csv(output_path)
-
+    df_stats.to_csv('extras/rasters_statistics.csv',index=False)
     return df_stats

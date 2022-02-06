@@ -20,6 +20,10 @@ class OCSVM:
         self.clf.fit(x)
 
     def predict(self, x):
+
+        return self.clf.predict(x)
+
+    def get_decision_function(self, x):
         return self.clf.decision_function(x)
 
 

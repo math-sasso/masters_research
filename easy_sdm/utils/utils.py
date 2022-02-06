@@ -70,21 +70,21 @@ class PathUtils:
             time.sleep(1)
 
     @classmethod
-    def file_path(csl, string):
+    def file_path(cls, string):
         if Path(string).is_file():
             return Path(string)
         else:
             raise FileNotFoundError(string)
 
     @classmethod
-    def file_path_existis(csl, string):
+    def file_path_existis(cls, string):
         if Path(string).is_file():
             raise FileExistsError()
         else:
             return Path(string)
 
     @classmethod
-    def dir_path(csl, string):
+    def dir_path(cls, string):
         if Path(string).is_dir():
             return Path(string)
         else:

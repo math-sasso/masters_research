@@ -9,14 +9,14 @@ import pandas as pd
 import rasterio
 from easy_sdm.configs import configs
 from easy_sdm.data import RasterInfoExtractor, RasterLoader, SpeciesInfoExtractor
-from easy_sdm.featuarizer import (
+from easy_sdm.enums import PseudoSpeciesGeneratorType
+
+from .environment_builder import EnverionmentLayersStacker
+from .pseudo_species_generators import (
     BasePseudoSpeciesGenerator,
-    MinMaxScalerWrapper,
     RSEPPseudoSpeciesGenerator,
-    EnverionmentLayersStacker,
 )
-from enums import PseudoSpeciesGeneratorType
-from configs import configs
+from .scaler import MinMaxScalerWrapper
 
 
 class SpeciesEnveriomentExtractor:
@@ -201,7 +201,7 @@ class SpeciesEnveriomentExtractor:
 
 class OccurrancesDatasetBuilder:
     def __init__(self, raster_path_list: List[Path]):
-        super().__init__(raster_path_list)
+        self.raster_path_list = raster_path_list
         self.species_env_extractor = SpeciesEnveriomentExtractor()
 
     def __get_var_names(self):
@@ -251,8 +251,7 @@ class OccurrancesDatasetBuilder:
 
 class PseudoAbsensesDatasetBuilder:
     def __init__(
-        self,
-        ps_generator_type: PseudoSpeciesGeneratorType,
+        self, ps_generator_type: PseudoSpeciesGeneratorType,
     ):
         self.ps_generator_type = ps_generator_type
 
@@ -266,8 +265,8 @@ class PseudoAbsensesDatasetBuilder:
 
         if self.ps_generator_type is PseudoSpeciesGeneratorType.RSEP:
             hyperparameters = configs["pseudo_species"]["RSEP"]
-            stacked_raster_coverages = EnverionmentLayersStacker.load(
-                Path.cwd() / "data/datasets/environment.npy"
+            stacked_raster_coverages = EnverionmentLayersStacker().load(
+                Path.cwd() / "data/numpy/env_stack.npy"
             )
             ps_generator = RSEPPseudoSpeciesGenerator(
                 hyperparameters=hyperparameters,
@@ -279,8 +278,8 @@ class PseudoAbsensesDatasetBuilder:
 
         self.ps_generator = ps_generator
 
-    def build(self, occurrence_dataset: pd.DataFrame, number_pseudo_absenses: int):
-        self.ps_generator.fit(occurrence_dataset)
+    def build(self, occurrence_df: pd.DataFrame, number_pseudo_absenses: int):
+        self.ps_generator.fit(occurrence_df)
         pseudo_absenses_df = self.ps_generator.generate(number_pseudo_absenses)
         return pseudo_absenses_df
 
@@ -293,10 +292,9 @@ class SDMDatasetCreator:
         raster_path_list: List[Path],
         statistics_dataset: pd.DataFrame,
         ps_generator_type: PseudoSpeciesGeneratorType,
-        ps_proportion:float,
+        ps_proportion: float,
     ) -> None:
-        #
-        # self.ps_generator = ps_generator
+
         self.statistics_dataset = statistics_dataset
         self.raster_path_list = raster_path_list
         self.ps_generator_type = ps_generator_type
@@ -304,21 +302,26 @@ class SDMDatasetCreator:
         self.__setup()
 
     def __setup(self):
-        self.occ_dataset_builder = OccurrancesDatasetBuilder(self.raster_path_list)
+        self.occ_dataset_builder = OccurrancesDatasetBuilder(
+            raster_path_list=self.raster_path_list
+        )
         self.min_max_scaler = MinMaxScalerWrapper(
             raster_path_list=self.raster_path_list,
             statistics_dataset=self.statistics_dataset,
         )
-
-        self.psa_dataset_builder = PseudoAbsensesDatasetBuilder(self.ps_generator_type)
+        self.psa_dataset_builder = PseudoAbsensesDatasetBuilder(
+            ps_generator_type=self.ps_generator_type
+        )
 
     def create_dataset(self, species_gdf: gpd.GeoDataFrame):
         occ_df = self.occ_dataset_builder.build(species_gdf)
-        number_pseudo_absenses = len(occ_df) * self.ps_proportion
-        psa_df = self.psa_dataset_builder.build(occurrence_dataset=occ_df,number_pseudo_absenses=number_pseudo_absenses)
-        df = occ_df + psa_df
-        scaled_df = self.min_max_scaler.scale_df(df)
-        import pdb
+        number_pseudo_absenses = int(len(occ_df) * self.ps_proportion)
 
-        pdb.set_trace()
+        scaled_occ_df = self.min_max_scaler.scale_df(occ_df)
+        psa_df = self.psa_dataset_builder.build(
+            occurrence_df=scaled_occ_df, number_pseudo_absenses=number_pseudo_absenses
+        )
+        scaled_psa_df = self.min_max_scaler.scale_df(psa_df)
+        scaled_df = scaled_occ_df + scaled_psa_df
+        import pdb; pdb.set_trace()
         return scaled_df

@@ -1,5 +1,4 @@
 from easy_sdm.featuarizer.dataset_builder import (
-    BaseDatasetBuilder,
     OccurrancesDatasetBuilder,
     PseudoAbsensesDatasetBuilder,
     SpeciesEnveriomentExtractor,
@@ -11,8 +10,6 @@ from easy_sdm.featuarizer.preprocessing import RasterStatisticsCalculator
 from easy_sdm.featuarizer.scaler import MinMaxScalerWrapper
 from easy_sdm.featuarizer.environment_builder import EnverionmentLayersStacker
 
-from easy_sdm.featuarizer.scaler import MinMaxScalerWrapper
-
 from easy_sdm.featuarizer.pseudo_species_generators import (
     BasePseudoSpeciesGenerator,
     RandomPseudoSpeciesGenerator,
@@ -21,7 +18,6 @@ from easy_sdm.featuarizer.pseudo_species_generators import (
 
 
 __all__ = [
-    "BaseDatasetBuilder",
     "OccurrancesDatasetBuilder",
     "PseudoAbsensesDatasetBuilder",
     "EnverionmentLayersStacker",

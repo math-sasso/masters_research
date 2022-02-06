@@ -84,7 +84,7 @@ def standarize_rasters(source_dirpath: str, destination_dirpath: str, raster_typ
             print(f"filepath: {filepath}")
 
 
-# standarize_rasters(Path.cwd()/ "data/raw",Path.cwd()/ "data/standarized_rasters")
+# standarize_rasters(Path.cwd()/ "data/raw/rasters/Bioclim_Rasters",Path.cwd()/ "data/processed_rasters/standarized_rasters/Bioclim_Rasters","bioclim")
 
 
 def burn_shapefile_in_raster(
@@ -97,7 +97,7 @@ def burn_shapefile_in_raster(
     raster_bunner.burn_and_save(shapfile=gdf, output_path=output_path)
 
 
-# burn_shapefile_in_raster(reference_raster_path=Path.cwd() / "data/processed_rasters/standarized_rasters/bio1_annual_mean_temperature.tif",
+# burn_shapefile_in_raster(reference_raster_path=Path.cwd() / "data/processed_rasters/standarized_rasters/Bioclim_Rasters/bio1_annual_mean_temperature.tif",
 #                         shapefile_path=Path.cwd() / "data/raw/shapefiles_brasil/level_0/BRA_adm0.shp",
 #                         output_path=Path.cwd() / "data/processed_rasters/others/brazilian_mask.tif")
 

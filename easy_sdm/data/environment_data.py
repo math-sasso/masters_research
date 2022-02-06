@@ -239,6 +239,7 @@ class RasterCliper:
             map_limits["north"],
         )
 
+        # width > height (Brasil)
         result_profile.update(
             {
                 "width": cropped_data.shape[1],

@@ -42,7 +42,6 @@ def build_sdm_dataset(
 
     species_gdf = gpd.read_file(Path.cwd() / "data/species_data/occurances/Canajus_cajan/Canajus_cajan.shp")
 
-    import pdb;pdb.set_trace()
     df = sdm_dataset_creator.create_dataset(species_gdf=species_gdf)
     return df
 
