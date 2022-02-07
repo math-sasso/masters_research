@@ -147,7 +147,7 @@ def mock_raw_raster_dataloader(mock_raw_raster_path):
 @pytest.fixture
 def df_stats(tmp_path, mock_mask_raster_path,processed_raster_paths_list):
 
-    from easy_sdm.featuarizer import RasterStatisticsCalculator
+    from easy_sdm.dataset_creation import RasterStatisticsCalculator
 
     output_path = tmp_path / "rasters_statistics.csv"
     RasterStatisticsCalculator(

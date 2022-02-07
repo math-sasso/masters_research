@@ -4,7 +4,7 @@ from typing import Optional
 
 import typer
 
-from easy_sdm.data import ShapefileRegion
+from easy_sdm.data import SpeciesInShapefileChecker
 from easy_sdm.data_colector import (
     standarize_rasters,
     collect_species_data,
@@ -13,6 +13,15 @@ from easy_sdm.data_colector import (
 )
 
 app = typer.Typer()
+
+
+# @app.command("download_raw_data")
+# @app.command("build_environment_data")
+# @app.command("build_species_data")
+# @app.command("create_features")
+# @app.command("train")
+# @app.command("visualize")
+
 
 # poetry run python3 easy_sdm/console.py download-soigrids-all-rasters -f mean
 @app.command("download-soigrids-all-rasters")
@@ -69,7 +78,7 @@ def save_specie(
     ),
 ):
     destination_dirpath = Path.cwd() / "data/species_data/occurances"
-    shp_region = ShapefileRegion(Path.cwd() / shapefile_region_delimiter_path)
+    shp_region = SpeciesInShapefileChecker(Path.cwd() / shapefile_region_delimiter_path)
     collect_species_data(
         species_id=species_id,
         species_name=species_name,
@@ -109,7 +118,7 @@ def save_milpa_species(
         "Capsicum pubescens": 2932943,
     }
 
-    shp_region = ShapefileRegion(Path.cwd() / shapefile_region_delimiter_path)
+    shp_region = SpeciesInShapefileChecker(Path.cwd() / shapefile_region_delimiter_path)
     destination_dirpath = Path.cwd() / "data/species_data/occurances"
     for species_name, species_id in species_dir.items():
 

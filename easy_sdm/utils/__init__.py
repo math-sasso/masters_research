@@ -1,4 +1,6 @@
 from easy_sdm.utils.logger import logger
-from easy_sdm.utils.utils import timeit, PathUtils, RasterUtils, TemporaryDirectory
+from easy_sdm.utils.path_utils import PathUtils, TemporaryDirectory
+from easy_sdm.utils.raster_utils import RasterUtils
+from easy_sdm.utils.data_loader import RasterLoader, ShapefileLoader
 
-__all__ = ["logger", "timeit", "PathUtils", "RasterUtils", "TemporaryDirectory"]
+__all__ = ["logger", "PathUtils", "RasterUtils", "TemporaryDirectory","RasterLoader", "ShapefileLoader"]

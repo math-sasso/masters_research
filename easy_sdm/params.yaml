@@ -11,6 +11,7 @@ maps:
       north: 6.271478
   no_data_val: -9999.0
   default_epsg: 4326
+  resolution: 0.00833333333333334
 
 mask:
   positive_mask_val: 0
