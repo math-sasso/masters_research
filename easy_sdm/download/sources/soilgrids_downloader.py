@@ -3,6 +3,7 @@ from easy_sdm.configs import configs
 from easy_sdm.utils import RasterLoader, PathUtils
 from owslib.wcs import WebCoverageService
 from easy_sdm.utils import RasterUtils
+from rasterio.plot import show
 
 
 class SoilgridsDownloader:
@@ -36,7 +37,7 @@ class SoilgridsDownloader:
 
     def __build_bbox(self):
         # check bounding box
-        limits = self.configs["maps"]["brazil_limits_with_security"]
+        limits = self.configs["maps"]["region_limits_with_security"]
         if limits["west"] > limits["east"] or limits["south"] > limits["north"]:
             raise ValueError(
                 "Please provide valid bounding box values for west, east, south and north."
@@ -46,8 +47,7 @@ class SoilgridsDownloader:
         return bbox
 
     def download(
-        self,
-        coverage_type: str,
+        self, coverage_type: str,
     ):
         self.__check_if_soilgrids_requester()
         output_dir = self.root_dir / self.variable
@@ -76,6 +76,8 @@ class SoilgridsDownloader:
                     print(type(e))
 
             i += 1
+        else:
+            print(f"{coverage_type} already downloaded")
 
     def get_coverage_list(self):
         self.__check_if_soilgrids_requester()

@@ -1,14 +1,19 @@
 maps:
-  brazil_limits:
+  region_limits:
       west: -73.981934
       east: -34.792929
       south: -33.750035
       north: 5.271478
-  brazil_limits_with_security:
+  region_limits_with_security:
       west: -74.981934
       east: -33.792929
       south: -34.750035
       north: 6.271478
+  # region_limits_with_security:
+  #     west: -76.000000
+  #     east: -65.000000
+  #     south: -56.000000
+  #     north: -17.000000
   no_data_val: -9999.0
   default_epsg: 4326
   resolution: 0.00833333333333334
@@ -25,6 +30,10 @@ gbif:
   drop_duplicates: True
   try_override_species_data: True
   country: "BR"
+
+species:
+  id: 7587087
+  name: "Cajanus cajan"
 
 pseudo_species:
   RSEP:

@@ -5,6 +5,7 @@ import pandas as pd
 import rasterio
 from easy_sdm.configs import configs
 
+
 class RasterStatisticsCalculator:
     """[A class to extract basic statistics from rasters considering only the masked territorry]
 
@@ -27,7 +28,7 @@ class RasterStatisticsCalculator:
             raster = rasterio.open(raster_path)
             raster_data = raster.read(1)
             inside_mask_vec = raster_data[
-                self.inside_mask_idx[1], self.inside_mask_idx[0]
+                self.inside_mask_idx[0], self.inside_mask_idx[1]
             ]
 
             filtered_vec = inside_mask_vec[
@@ -36,7 +37,7 @@ class RasterStatisticsCalculator:
 
             df = df.append(
                 {
-                    "raster_name": Path(raster_path).name,
+                    "raster_name": Path(raster_path).name.split(".")[0],
                     "min": np.min(filtered_vec),
                     "max": np.max(filtered_vec),
                     "mean": np.mean(filtered_vec),

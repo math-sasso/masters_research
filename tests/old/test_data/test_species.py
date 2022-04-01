@@ -1,5 +1,5 @@
 def test_species_request(tmp_path, mock_map_shapefile_path):
-    from easy_sdm.data_processing import (
+    from easy_sdm.raster_processing import (
         Species,
         SpeciesGDFBuilder,
         SpeciesInShapefileChecker,

@@ -1,6 +1,7 @@
 import os
 import matplotlib.pyplot as plt
 
+
 class MapPlotter(object):
     def __init__(self) -> None:
         pass

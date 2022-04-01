@@ -26,6 +26,8 @@ pyproj = "^3.3.0"
 Shapely = "^1.8.0"
 OWSLib = "^0.25.0"
 mlflow = "^1.23.1"
+pytorch-tabnet = "^3.1.1"
+statsmodels = "^0.13.2"
 
 [tool.poetry.scripts]
 easy_sdm = "easy_sdm.console:app"

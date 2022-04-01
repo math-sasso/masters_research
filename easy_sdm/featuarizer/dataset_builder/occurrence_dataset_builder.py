@@ -7,7 +7,9 @@ import numpy as np
 import pandas as pd
 import rasterio
 from easy_sdm.configs import configs
-from easy_sdm.data_processing import RasterInfoExtractor, SpeciesInfoExtractor
+from easy_sdm.raster_processing import RasterInfoExtractor
+from easy_sdm.species_collection import SpeciesInfoExtractor
+from easy_sdm.utils import RasterLoader
 
 
 class SpeciesEnveriomentExtractor:
@@ -196,7 +198,7 @@ class OccurrancesDatasetBuilder:
         self.species_env_extractor = SpeciesEnveriomentExtractor()
 
     def __get_var_names(self):
-        return [path.name.split(".")[0] for path in self.raster_path_list]
+        return [Path(path).name.split(".")[0] for path in self.raster_path_list]
 
     def __create_df(
         self,
@@ -218,8 +220,7 @@ class OccurrancesDatasetBuilder:
         return df
 
     def build(
-        self,
-        species_gdf: gpd.GeoDataFrame,
+        self, species_gdf: gpd.GeoDataFrame,
     ):
         """Save all extracted to a numpy array"""
 

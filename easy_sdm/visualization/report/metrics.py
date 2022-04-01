@@ -5,7 +5,7 @@ class MetricsPlotter(object):
     def __init__(self) -> None:
         pass
 
-    def saving_input_vars_histograms(self,df, output_path: str, suptitle: str):
+    def saving_input_vars_histograms(self, df, output_path: str, suptitle: str):
         """
         Function to generate and sabe histograms
         """

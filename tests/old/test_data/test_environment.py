@@ -5,7 +5,7 @@ from tkinter import Variable
 import numpy as np
 import rasterio
 from easy_sdm.configs import configs
-from easy_sdm.data_processing import (
+from easy_sdm.raster_processing import (
     RasterCliper,
     RasterLoader,
     RasterStandarizer,
@@ -48,7 +48,11 @@ def test_clip_raster(tmp_path, raw_rasters_dirpath):
 
 def test_species_inside_regions(tmp_path, mock_map_shapefile_path):
     import geopandas as gpd
-    from easy_sdm.data_processing import SpeciesInShapefileChecker, Species, SpeciesGDFBuilder
+    from easy_sdm.raster_processing import (
+        SpeciesInShapefileChecker,
+        Species,
+        SpeciesGDFBuilder,
+    )
 
     mays_code = 5290052
     mays = SpeciesGDFBuilder(Species(taxon_key=mays_code, name="Zea mays"))

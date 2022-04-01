@@ -1,23 +1,29 @@
 from pathlib import Path
 from .sources.soilgrids_downloader import SoilgridsDownloader
 from easy_sdm.utils import PathUtils
+from enums import RasterSource
 
 
 class DownloadJob:
-    def __init__(self) -> None:
+    def __init__(self, raw_rasters_dirpath) -> None:
+        self.raw_rasters_dirpath = raw_rasters_dirpath
         self.__build_empty_folders()
 
     def __build_empty_folders(self):
-        raw_rasters_dir = Path.cwd() / "data/downloads/raw_rasters"
-        folder_list = ["Bioclim", "Envirem", "Soilgrids"]
+
+        folder_list = [e.name for e in RasterSource]
         for folder in folder_list:
-            PathUtils.create_folder(raw_rasters_dir / folder)
+            PathUtils.create_folder(self.raw_rasters_dirpath / folder)
 
     def download_bioclim_rasters(self):
         # TODO
         raise NotImplementedError()
 
     def download_envirem_rasters(self):
+        # TODO
+        raise NotImplementedError()
+
+    def download_shapefile_region(self):
         # TODO
         raise NotImplementedError()
 
@@ -44,12 +50,12 @@ class DownloadJob:
         reference_raster_path = (
             Path.cwd()
             / "data"
-            / "data_processing"
-            / "rasters"
-            / "Bioclim_Rasters"
+            / "raster_processing"
+            / "environment_variables_rasters"
+            / RasterSource.Bioclim.name
             / "bio1_annual_mean_temperature.tif"
         )
-        root_dir = Path.cwd() / "data" / "raw_srasters" / "Soilgrids_Rasters"
+        root_dir = self.raw_rasters_dirpath / RasterSource.Soilgrids.name
         soilgrids_downloader = SoilgridsDownloader(
             reference_raster_path=reference_raster_path, root_dir=root_dir
         )

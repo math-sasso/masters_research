@@ -1,13 +1,10 @@
 from abc import ABC, abstractmethod
-from argparse import ArgumentError
-from typing import Dict
 
 import numpy as np
 import pandas as pd
 import rasterio
 from easy_sdm.configs import configs
-
-from easy_sdm.models import OCSVM
+from easy_sdm.ml import OCSVM
 
 
 class BasePseudoSpeciesGenerator(ABC):
@@ -86,7 +83,7 @@ class RSEPPseudoSpeciesGenerator(BasePseudoSpeciesGenerator):
         ]  # This will be necessary to set points outside map to the minimum
 
         inside_country_values = self.stacked_raster_coverages[
-            :, self.inside_mask_idx[1], self.inside_mask_idx[0]
+            :, self.inside_mask_idx[0], self.inside_mask_idx[1]
         ].T
         Z[self.inside_mask_idx[0], self.inside_mask_idx[1]] = self.ocsvm.predict(
             inside_country_values
@@ -112,6 +109,4 @@ class RSEPPseudoSpeciesGenerator(BasePseudoSpeciesGenerator):
             pseudo_absenses_df = pseudo_absenses_df.append(
                 pseudo_absense_row, ignore_index=True
             )
-
-        pseudo_absenses_df["label"] = 0
         return pseudo_absenses_df

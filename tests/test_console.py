@@ -4,7 +4,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import rasterio
-from easy_sdm.data_processing import RasterStandarizer, ShapefileLoader
+from easy_sdm.raster_processing import RasterStandarizer, ShapefileLoader
 from easy_sdm.data_colector import burn_shapefile_in_raster, standarize_rasters
 from easy_sdm.dataset_creation import (
     OccurrancesDatasetBuilder,
@@ -19,12 +19,17 @@ from pathlib import Path
 
 import numpy as np
 import rasterio
-from easy_sdm.data_processing import RasterInfoExtractor, RasterLoader
+from easy_sdm.raster_processing import RasterInfoExtractor, RasterLoader
 from easy_sdm.data_colector import burn_shapefile_in_raster, standarize_rasters
+
 
 def test_standarize_rasters(tmp_path, raw_rasters_dirpath):
 
-    standarize_rasters(source_dirpath=raw_rasters_dirpath / "Elevation_Rasters",destination_dirpath = tmp_path,raster_type='elevation')
+    standarize_rasters(
+        source_dirpath=raw_rasters_dirpath / "Elevation_Rasters",
+        destination_dirpath=tmp_path,
+        raster_type="elevation",
+    )
     raster1 = tmp_path / "elev1_strm_worldclim_elevation.tif"
     raster2 = tmp_path / "elev2_envirem_terrain_roughness_index.tif"
     assert Path(raster1).is_file()
@@ -35,7 +40,7 @@ def test_standarize_rasters(tmp_path, raw_rasters_dirpath):
 def test_burn_shapefile_in_raster(
     tmp_path, mock_map_shapefile_path, mock_processed_raster_path
 ):
-    output_path = tmp_path / "brazilian_mask.tif"
+    output_path = tmp_path / "region_mask.tif"
     burn_shapefile_in_raster(
         reference_raster_path=mock_processed_raster_path,
         shapefile_path=mock_map_shapefile_path,
@@ -49,20 +54,19 @@ def test_burn_shapefile_in_raster(
     assert np.array_equal(uniques, array_01)
 
 
-def test_statistics_table_generatio(tmp_path,mock_master_raster_path):
+def test_statistics_table_generatio(tmp_path, mock_master_raster_path):
     processed_rasters_dirpath = PathUtils.dir_path(
         Path.cwd() / "data/processed_rasters/standarized_rasters"
     )
     raster_path_list = PathUtils.get_rasters_filepaths_in_dir(processed_rasters_dirpath)
 
-    output_path = tmp_path / 'rasters_statistics.csv'
+    output_path = tmp_path / "rasters_statistics.csv"
     RasterStatisticsCalculator(
         raster_path_list=raster_path_list, mask_raster_path=mock_master_raster_path
     ).build_table(output_path)
 
     df_stats = pd.read_csv(output_path)
     assert df_stats.shape(0) == len(raster_path_list)
-
 
     # def test_sdm_dataset_creator(mock_species_shapefile_path):
     #     processed_rasters_dirpath = PathUtils.dir_path(Path.cwd() / "data/processed_rasters/standarized_rasters")
