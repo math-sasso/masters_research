@@ -1,84 +1,160 @@
-# class TrainJob():
-#     train_data_loader: BaseDataLoader
-#     validation_data_loader: BaseDataLoader
-#     estimator: BaseEstimator
-#     estimator_parameters: Dict
-#     output_path: Path
-#     mlflow_uri: str
-#     mlflow_experiment_name: str
-#     mlflow_databricks_dirpath: Optional[str]
+from dataclasses import dataclass
+from pathlib import Path
 
-#     def __build_empty_folders(self):
-#         raise NotImplementedError()
+from easy_sdm.enums import EstimatorType
+from easy_sdm.typos import Species
+from easy_sdm.utils import DatasetLoader
+from utils import DatasetLoader
 
-#     def dataset_split(self,df: pd.DataFrame, random_state:int):
-#         y = df['label'].to_numpy()
-#         X = df.drop("label", axis=1).to_numpy()
-#         X_train, X_, y_train, y_ = train_test_split(X, y, test_size=0.7, random_state=random_state)
-#         X_valid, X_test, y_valid, y_test = train_test_split(X_, y_, test_size=0.5, random_state=random_state)
-#         return X_train,y_train,X_valid, y_valid, X_test, y_test
+from .metrics import MetricsTracker
+from .models import MLP, OCSVM, GradientBoosting, TabNet, Xgboost, XgboostRF, BaseEstimator
+from .persistance.mlflow_persisance import MLFlowPersistence
 
-#     def setup(self):
-#         logger.info("TrainJob.setup begin...")
+class TrainJob:
+    def __init__(self,
+        train_data_loader: DatasetLoader,
+        validation_data_loader: DatasetLoader,
+        estimator_type: EstimatorType,
+        species:Species,
+        output_path: Path = None
+    ) -> None:
+        self.train_data_loader = train_data_loader
+        self.validation_data_loader = validation_data_loader
+        self.estimator_type = estimator_type
+        self.species = species
+        self.output_path = output_path
 
-#         # SETUP MLFLOW
-#         self.mlflow_persister = MLFlowPersistence(
-#             self.mlflow_uri, self.mlflow_experiment_name, self.mlflow_databricks_dirpath
-#         )
+        estimator_selector = EstimatorSelector(self.estimator_type)
+        estimator_selector.select_estimator()
+        self.estimator = estimator_selector.get_estimator()
+        self.estimator_parameters = estimator_selector.get_estimator_parameters()
+        self.vif_columns = False
+        self.__setup()
 
-#         # LOAD DATASETS
-#         (
-#             self.train_features,
-#             self.y_train_df,
-#             self.ids_train_df,
-#         ) = self.train_data_loader.load_dataset()
-#         (
-#             self.prediction_features,
-#             self.y_true_df,
-#             self.pred_ids_df,
-#         ) = self.validation_data_loader.load_dataset()
+    def __build_empty_folders(self):
+        raise NotImplementedError()
 
-#         # SETTING PIPELINE
-#         dict_dtypes = dict(self.train_features.dtypes)
-#         numerical_features = [k for k, v in dict_dtypes.items() if v in [float, int]]
-#         categorical_features = [
-#             x for x in self.train_features.columns if x not in numerical_features
-#         ]
-#         self.pipeline = SklearnPipeline(
-#             model=self.estimator,
-#             numerical_features=numerical_features,
-#             categorical_features=categorical_features,
-#         )
+    def normal_setup(self,train_data_loader:DatasetLoader,validation_data_loader:DatasetLoader):
+        self.train_data_loader = train_data_loader
+        self.validation_data_loader = validation_data_loader
+        self.__setup()
 
-#         # SETTING METRICS TRACKER
-#         self.metrics_tracker = MetricsTracker()
+    def vif_setup(self,vif_train_data_loader:DatasetLoader,vif_validation_data_loader:DatasetLoader):
+        self.vif_columns = True
+        self.train_data_loader = vif_train_data_loader
+        self.validation_data_loader = vif_validation_data_loader
+        self.__setup()
 
-#     def fit(self):
-#         logger.info("TrainJob.fit begin...")
+    def __setup(self):
 
-#         self.pipeline.fit(self.train_features, self.y_train_df)
-#         self.__validate()
+        # SETUP MLFLOW
+        self.mlflow_experiment_name = self.species.get_name_for_plots()
+        self.columns_considered = "vif_columns" if self.vif_columns else "all_columns"
 
-#     def __validate(self):
-#         logger.info("TrainJob.valid begin...")
+        self.mlflow_persister = MLFlowPersistence(
+            self.mlflow_experiment_name
+        )
 
-#         self.predictions = self.pipeline.predict(X_hat=self.prediction_features)
-# #
-#         self.metrics = self.metrics_tracker.get_metrics(
-#             y_true=self.y_true_df, y_hat=self.predictions
-#         )
+        # LOAD DATASETS
+        (
+            self.X_train_df,
+            self.y_train_df,
+        ) = self.train_data_loader.load_dataset()
+        (
+            self.x_valid_df,
+            self.y_valid_df,
+        ) = self.validation_data_loader.load_dataset()
 
-#     def persist(self):
-#         EstimatorPersistence.dump(estimator=self.pipeline, output_dir=self.output_path)
-#         DataPersistence.features_payload_profiling(
-#             value=self.train_features, output_dir=self.output_path
-#         )
-#         ExperimentPersistence.save_scores(self.metrics, self.output_path, "metrics")
-#         ExperimentPersistence.save_predictions(
-#             self.predictions, self.output_path, "predictions"
-#         )
-#         self.mlflow_persister.persist(
-#             model=self.pipeline,
-#             metrics=self.metrics,
-#             parameters=self.estimator_parameters,
-#         )
+        # SETTING PIPELINE
+        self.pipeline = self.estimator
+        # dict_dtypes = dict(self.X_train_df.dtypes)
+        # numerical_features = [k for k, v in dict_dtypes.items() if v in [float, int]]
+        # categorical_features = [
+        #     x for x in self.X_train_df.columns if x not in numerical_features
+        # ]
+        # self.pipeline = SklearnPipeline(
+        #     model=self.estimator,
+        #     numerical_features=numerical_features,
+        #     categorical_features=categorical_features,
+        # )
+
+        # SETTING METRICS TRACKER
+        self.metrics_tracker = MetricsTracker()
+
+    def fit(self):
+        import pdb;pdb.set_trace()
+        self.pipeline.fit(self.X_train_df, self.y_train_df,self.x_valid_df,self.y_valid_df)
+        self.__validate()
+
+    def __validate(self):
+
+        import pdb;pdb.set_trace()
+        self.prediction_scores = self.pipeline.predict_adaptability(x=self.x_valid_df)
+        self.metrics = self.metrics_tracker.get_metrics( y_true=self.y_valid_df, y_score=self.prediction_scores)
+
+    def persist(self):
+        # EstimatorPersistence.dump(estimator=self.pipeline, output_dir=self.output_path)
+        # DataPersistence.features_payload_profiling(
+        #     value=self.X_train_df, output_dir=self.output_path
+        # )
+        # ExperimentPersistence.save_scores(self.metrics, self.output_path, "metrics")
+        # ExperimentPersistence.save_predictions(
+        #     self.predictions, self.output_path, "predictions"
+        # )
+        self.mlflow_persister.persist(
+            model=self.pipeline,
+            metrics=self.metrics,
+            parameters=self.estimator_parameters,
+            vif=self.columns_considered
+        )
+
+        import pdb;pdb.set_trace()
+
+class EstimatorSelector:
+    def __init__(self,estimator_type:EstimatorType) -> None:
+        self.random_state = 1
+        self.estimator_type = estimator_type
+
+
+    def select_estimator(self):
+
+        if self.estimator_type == EstimatorType.MLP:
+            estimator = MLP(
+            hidden_layer_sizes=(200, 100, 50, 20, 10), random_state=self.random_state, max_iter=8000
+        )
+        elif self.estimator_type == EstimatorType.GradientBoosting:
+            estimator = GradientBoosting(
+            n_estimators=200,
+            learning_rate=0.1,
+            max_depth=5,
+            random_state=self.random_state,
+            criterion="squared_error"
+            )
+        elif self.estimator_type == EstimatorType.Tabnet:
+            estimator = TabNet(device_name='cpu')
+        elif self.estimator_type == EstimatorType.Xgboost:
+            estimator = Xgboost()
+        elif self.estimator_type == EstimatorType.XgboostRF:
+            estimator = XgboostRF()
+        elif self.estimator_type == EstimatorType.OCSVM:
+            estimator =  OCSVM(nu=0.01, kernel="rbf", gamma='auto')
+        else:
+            raise ValueError("Use one of the possible estimators")
+
+        self.estimator = estimator
+
+    def get_estimator(self):
+        return self.estimator
+
+    def get_estimator_parameters(self):
+        if self.estimator_type in [EstimatorType.MLP,EstimatorType.GradientBoosting,EstimatorType.OCSVM]:
+            parameters = self.estimator.get_params()
+        elif self.estimator_type in [EstimatorType.Xgboost, EstimatorType.XgboostRF]:
+            parameters = self.estimator.get_xgb_params()
+        elif self.estimator_type in [EstimatorType.TabNet]:
+            parameters = self.estimator.named_parameters()
+        else:
+            raise ValueError()
+
+        return parameters
+

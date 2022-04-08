@@ -4,9 +4,10 @@ from ..metrics.kappa import Kappa
 from pytorch_tabnet.tab_model import TabNetClassifier
 
 
-class TabNetProxy(TabNetClassifier):
+class TabNet(TabNetClassifier):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
+        self.framework = "pytorch"
 
     def fit(self, X_train, y_train, X_valid, y_valid, **kwargs):
 
@@ -18,5 +19,8 @@ class TabNetProxy(TabNetClassifier):
             **kwargs
         )
 
-    def predict_adaptability(self, X_test):
-        return super().predict_proba(X_test)[:, 1]
+    def predict(self, x):
+        return super().predict(x)
+
+    def predict_adaptability(self, x):
+        return super().predict_proba(x)[:, 1]

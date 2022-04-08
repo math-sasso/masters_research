@@ -6,33 +6,28 @@ from pathlib import Path
 class MLFlowPersistence:
     def __init__(
         self,
-        mlflow_uri: str,
         mlflow_experiment_name: str,
-        mlflow_databricks_dirpath: Optional[str],
     ) -> None:
-        self.mlflow_uri = mlflow_uri
         self.mlflow_experiment_name = mlflow_experiment_name
-        self.mlflow_databricks_dirpath = mlflow_databricks_dirpath
+        self.__setup_mlflow()
         self.__set_experiment()
+
+    def __setup_mlflow(self):
+        mlflow.set_tracking_uri('http://127.0.0.1:5000/')
 
     def __set_experiment(self):
 
-        if self.mlflow_uri:
-            print(f"self.mlflow_uri: {self.mlflow_uri}")
-            mlflow.set_tracking_uri(self.mlflow_uri)
-            tracked_uri = mlflow.get_tracking_uri()
-            print(f"Tracked URI: {tracked_uri}")
-            mlflow.set_experiment(self.mlflow_experiment_name)
-        else:
-            print("MLFLOW_URI is not set")
+        if not mlflow.get_experiment_by_name(self.mlflow_experiment_name):
+            mlflow.create_experiment(name=self.mlflow_experiment_name)
 
     def __persist_logs(self, metrics: Dict, parameters: Dict):
         print(f"Logged Parameters {parameters}")
         print(f"Logged Metrics {metrics}")
         mlflow.log_params(parameters)
         mlflow.log_metrics(metrics)
+        # mlflow.log_artifact('roi_features.csv', artifact_path='features')
 
-    def persist(self, model, metrics: Dict, parameters: Dict, end=True):
+    def persist(self, model, metrics: Dict, parameters: Dict, vif:str,end=True):
 
         if mlflow.active_run():
             mlflow.end_run()
@@ -40,11 +35,19 @@ class MLFlowPersistence:
         run = mlflow.start_run()
         run_id = run.info.run_id
 
+        mlflow.set_tag("VIF", vif)
         mlflow.set_tag("run ID", run_id)
 
         self.__persist_logs(metrics, parameters)
 
-        mlflow.sklearn.log_model(sk_model=model, artifact_path="model")
+        if model.framework == "sklearn":
+            mlflow.sklearn.log_model(model, self.mlflow_experiment_name)
+        elif model.framework == "pytorch":
+            mlflow.pytorch.log_model(model, self.mlflow_experiment_name)
+        elif model.framework == "xgboost":
+            mlflow.xgboost.log_model(model, self.mlflow_experiment_name)
+        else:
+            raise TypeError()
 
         if end:
             mlflow.end_run()

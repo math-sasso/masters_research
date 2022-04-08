@@ -18,18 +18,18 @@ from easy_sdm.utils.data_loader import ShapefileLoader
 app = typer.Typer()
 
 milpa_species_dict = {
-    "Zea mays": 5290052,
-    "Cucurbita moschata": 7393329,
-    "Cucurbita maxima": 2874515,
-    "Cucurbita pepo": 2874508,
-    "Phaseolus vulgaris": 5350452,
-    "Vigna unguiculata": 2982583,
-    "Cajanus cajan": 7587087,
-    "Piper nigrum": 3086357,
-    "Capsicum annuum": 2932944,
-    "Capsicum baccatum": 2932938,
-    "Capsicum frutescens": 8403992,
-    "Capsicum chinense": 2932942,
+    5290052:"Zea mays",
+    7393329:"Cucurbita moschata",
+    2874515:"Cucurbita maxima",
+    2874508:"Cucurbita pepo",
+    5350452:"Phaseolus vulgaris",
+    2982583:"Vigna unguiculata",
+    7587087:"Cajanus cajan",
+    3086357:"Piper nigrum",
+    2932944:"Capsicum annuum",
+    2932938:"Capsicum baccatum",
+    8403992:"Capsicum frutescens",
+    2932942:"Capsicum chinense",
 }
 
 
@@ -94,7 +94,7 @@ def get_species_dataframe(species_name):
 def vif_all_species():
     from easy_sdm.featuarizer import VIFCalculator
 
-    tmp_vif_dirpath = Path.cwd() / "vif_analyses"
+    tmp_vif_dirpath = Path.cwd() / "data/output/vif_analysis"
     tmp_vif_dirpath.mkdir(parents=True, exist_ok=True)
 
     dataset_dirpath = Path.cwd() / "data/featuarizer"
@@ -106,7 +106,7 @@ def vif_all_species():
         region_shapefile_path=region_shapefile_path,
     )
 
-    for name, id in milpa_species_dict.items():
+    for  id, name in milpa_species_dict.items():
 
         species_dict = {"id": id, "name": name}
         job.collect_species_data(
@@ -144,8 +144,8 @@ def models_comparision():
 
     df_result = pd.DataFrame(columns=['species_name','mlp','mlp_simplified','gradient_boosting','gradient_boosting_simplified'])
     datasets_dirpath = Path.cwd() / "data/featuarizer"
-    vif_dirpath = Path.cwd() / "vif_analyses"
-    for name, id in milpa_species_dict.items():
+    vif_dirpath = Path.cwd() / "data/output/vif_analysis"
+    for id, name in milpa_species_dict.items():
         species_name = name.replace(" ", "_")
 
         # import pdb;pdb.set_trace()

@@ -15,10 +15,6 @@ from easy_sdm.featuarizer.dataset_builder.statistics_calculator import (
 )
 
 from easy_sdm.featuarizer.dataset_creation_job import DatasetCreationJob
-from easy_sdm.environment.environment_creation_job import EnvironmentCreationJob
-
-from easy_sdm.featuarizer.dataset_builder.VIF_calculator import VIFCalculator
-
 
 __all__ = [
     "OccurrancesDatasetBuilder",
@@ -28,7 +24,5 @@ __all__ = [
     "BasePseudoSpeciesGenerator",
     "RandomPseudoSpeciesGenerator",
     "RSEPPseudoSpeciesGenerator",
-    "DatasetCreationJob",
-    "EnvironmentCreationJob",
-    "VIFCalculator",
+    "DatasetCreationJob"
 ]

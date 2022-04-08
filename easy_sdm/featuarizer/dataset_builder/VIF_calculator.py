@@ -6,11 +6,15 @@ from easy_sdm.utils import DatasetLoader
 
 
 class VIFCalculator:
-    def __init__(self) -> None:
+    def __init__(self, dataset_path:Path, output_column:str) -> None:
         self.X = None
+        self.dataset_path = dataset_path
+        self.output_column = output_column
 
-    def calculate_vif(self, X: pd.DataFrame):
 
+    def calculate_vif(self,):
+        dataloader = DatasetLoader(dataset_path=self.dataset_path,output_column=self.output_column)
+        X,self.y = dataloader.load_dataset()
         max = inf
         while max > 10:
             # VIF dataframe
@@ -32,7 +36,11 @@ class VIFCalculator:
 
     def get_optimous_columns(self):
         assert self.X is not None
-        return self.X.columns
+        return self.X.columns.to_list()
+
+    def get_optimous_columns_with_label(self):
+        assert self.X is not None
+        return self.get_optimous_columns() + [self.output_column]
 
     def get_vif_df(self):
         assert self.vif_data is not None
@@ -40,6 +48,8 @@ class VIFCalculator:
 
     def get_optimouns_df(self):
         assert self.X is not None
+        df = self.X.copy()
+        df[self.output_column] = self.y.to_numpy()
         return self.X
 
 

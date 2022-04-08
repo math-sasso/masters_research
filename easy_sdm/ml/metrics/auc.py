@@ -8,5 +8,6 @@ class AUC(Metric):
         self._maximize = True
 
     def __call__(self, y_true, y_score):
-        auc = roc_auc_score(y_true, y_score[:, 1])
+        auc = roc_auc_score(y_true, y_score)
+        # auc = roc_auc_score(y_true, y_score[:, 1])
         return auc

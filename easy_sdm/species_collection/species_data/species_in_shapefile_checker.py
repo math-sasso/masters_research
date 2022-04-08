@@ -1,7 +1,6 @@
 from pathlib import Path
 
 import geopandas as gpd
-from easy_sdm.utils import ShapefileLoader
 
 
 class SpeciesInShapefileChecker:

@@ -38,8 +38,12 @@ class PseudoAbsensesDatasetBuilder:
                 region_mask_raster=region_mask_raster,
                 stacked_raster_coverages=stacked_raster_coverages,
             )
+
         elif self.ps_generator_type is PseudoSpeciesGeneratorType.Random:
             raise NotImplementedError()
+
+        else:
+            raise ValueError()
 
         self.ps_generator = ps_generator
 

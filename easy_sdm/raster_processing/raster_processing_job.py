@@ -1,17 +1,15 @@
 from pathlib import Path
 
-from black import out
-
 import rasterio
-from rasterio.plot import show
 from easy_sdm.configs import configs
 from easy_sdm.enums import RasterSource
+from easy_sdm.utils import (PathUtils, RasterLoader, ShapefileLoader,
+                            TemporaryDirectory)
+from rasterio.plot import show
 
-from .processing.raster_shapefile_burner import RasterShapefileBurner
-from .processing.raster_data_standarizer import RasterDataStandarizer
 from .processing.raster_cliper import RasterCliper
-
-from easy_sdm.utils import RasterLoader, ShapefileLoader, TemporaryDirectory, PathUtils
+from .processing.raster_data_standarizer import RasterDataStandarizer
+from .processing.raster_shapefile_burner import RasterShapefileBurner
 
 
 class RasterProcessingJob:

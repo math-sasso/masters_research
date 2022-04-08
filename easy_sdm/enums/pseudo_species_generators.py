@@ -1,6 +1,6 @@
-from enum import Enum, auto
+from enum import Enum
 
 
 class PseudoSpeciesGeneratorType(Enum):
-    RSEP = auto()
-    Random = auto()
+    RSEP = "rsep"
+    Random = "random"

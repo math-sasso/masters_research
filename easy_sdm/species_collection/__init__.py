@@ -1,5 +1,4 @@
 from easy_sdm.species_collection.species_colection_job import SpeciesCollectionJob
-from easy_sdm.species_collection.species_data.species import Species
 from easy_sdm.species_collection.species_data.species_gdf_builder import (
     SpeciesGDFBuilder,
 )
@@ -12,7 +11,6 @@ from easy_sdm.species_collection.species_data.species_information_extractor impo
 
 __all__ = [
     "SpeciesInShapefileChecker",
-    "Species",
     "SpeciesGDFBuilder",
     "SpeciesInfoExtractor",
     "SpeciesCollectionJob",

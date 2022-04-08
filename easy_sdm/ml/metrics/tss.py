@@ -8,7 +8,8 @@ class TSS(Metric):
         self._maximize = True
 
     def __call__(self, y_true, y_score):
-        cm = confusion_matrix(y_true, (y_score[:, 1] >= 0.5).astype(int))
+        # cm = confusion_matrix(y_true, (y_score[:, 1] >= 0.5).astype(int))
+        cm = confusion_matrix(y_true, (y_score >= 0.5).astype(int))
         TP = cm[1][1]
         TN = cm[0][0]
         FP = cm[0][1]

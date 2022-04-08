@@ -40,3 +40,16 @@ pseudo_species:
     kernel: 'rbf'
     gamma: 'scale'
     nu: 0.5
+
+model:
+  binary_classification:
+    mlp:
+      hidden_layer_sizes:
+      activation:
+
+
+  anomaly_detection:
+    ocsvm:
+      kernel: 'rbf'
+      gamma: 'scale'
+      nu: 0.5

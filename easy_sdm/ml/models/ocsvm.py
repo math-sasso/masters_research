@@ -1,16 +1,17 @@
-from sklearn import svm
+from sklearn.svm import OneClassSVM
 
+# nu: percent of anomalies
 
-class OCSVM:
-    def __init__(self, **hyperparams) -> None:
-        self.hyperparams = hyperparams
+class OCSVM(OneClassSVM):
+    def __init__(self,**kwargs) -> None:
+        super().__init__(**kwargs)
+        self.framework = "sklearn"
 
-    def fit(self, x):
-        self.clf = svm.OneClassSVM(**self.hyperparams)
-        self.clf.fit(x)
+    def fit(self, X_train, y_train=None, X_valid=None, y_valid=None,**kwargs):
+        super().fit(X_train,**kwargs)
 
     def predict(self, x):
-        return self.clf.predict(x)
+        return super().predict(x)
 
-    def get_decision_function(self, x):
-        return self.clf.decision_function(x)
+    def predict_adaptability(self, x):
+        return super().decision_function(x)

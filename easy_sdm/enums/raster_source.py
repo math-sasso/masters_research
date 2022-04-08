@@ -1,7 +1,7 @@
-from enum import Enum, auto
+from enum import Enum
 
 
 class RasterSource(Enum):
-    Bioclim = auto()
-    Envirem = auto()
-    Soilgrids = auto()
+    Bioclim = "bioclim"
+    Envirem = "envirem"
+    Soilgrids = "soilgrids"

@@ -13,7 +13,6 @@ class RasterLoader:
 
     def load_dataset(self):
         raster = rasterio.open(self.raster_path)
-        # raster = self.__read_and_check(raster)
         return raster
 
 

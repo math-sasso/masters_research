@@ -56,7 +56,7 @@ class RSEPPseudoSpeciesGenerator(BasePseudoSpeciesGenerator):
         # Coords X and Y in two tuples where condition matchs (array(),array())
 
         occurrence_df = occurrence_df.drop("label", axis=1)
-        self.ocsvm.fit(x=occurrence_df.values)
+        self.ocsvm.fit(X_train=occurrence_df.values)
         self.columns = occurrence_df.columns
 
     def __get_decision_points(self):
