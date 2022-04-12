@@ -82,13 +82,10 @@ class TrainJob:
         self.metrics_tracker = MetricsTracker()
 
     def fit(self):
-        import pdb;pdb.set_trace()
         self.pipeline.fit(self.X_train_df, self.y_train_df,self.x_valid_df,self.y_valid_df)
         self.__validate()
 
     def __validate(self):
-
-        import pdb;pdb.set_trace()
         self.prediction_scores = self.pipeline.predict_adaptability(x=self.x_valid_df)
         self.metrics = self.metrics_tracker.get_metrics( y_true=self.y_valid_df, y_score=self.prediction_scores)
 
@@ -107,8 +104,6 @@ class TrainJob:
             parameters=self.estimator_parameters,
             vif=self.columns_considered
         )
-
-        import pdb;pdb.set_trace()
 
 class EstimatorSelector:
     def __init__(self,estimator_type:EstimatorType) -> None:
@@ -133,9 +128,9 @@ class EstimatorSelector:
         elif self.estimator_type == EstimatorType.Tabnet:
             estimator = TabNet(device_name='cpu')
         elif self.estimator_type == EstimatorType.Xgboost:
-            estimator = Xgboost()
+            estimator = Xgboost(use_label_encoder =False)
         elif self.estimator_type == EstimatorType.XgboostRF:
-            estimator = XgboostRF()
+            estimator = XgboostRF(use_label_encoder =False)
         elif self.estimator_type == EstimatorType.OCSVM:
             estimator =  OCSVM(nu=0.01, kernel="rbf", gamma='auto')
         else:

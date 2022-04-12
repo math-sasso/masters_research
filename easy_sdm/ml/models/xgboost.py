@@ -7,7 +7,7 @@ class Xgboost(XGBClassifier):
 
     def fit(self, X_train, y_train, X_valid=None, y_valid=None, **kwargs):
         super().fit(X_train.to_numpy(), y_train.to_numpy().ravel(), **kwargs)
-        import pdb;pdb.set_trace()
+
     def predict(self, x):
         return super().predict(x)
 

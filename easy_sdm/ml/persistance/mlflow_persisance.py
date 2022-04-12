@@ -1,5 +1,5 @@
 import mlflow
-from typing import Dict, Optional
+from typing import Dict
 from pathlib import Path
 
 
@@ -13,7 +13,8 @@ class MLFlowPersistence:
         self.__set_experiment()
 
     def __setup_mlflow(self):
-        mlflow.set_tracking_uri('http://127.0.0.1:5000/')
+        ml_dirpath = str(Path.cwd() / 'data/ml')
+        mlflow.set_tracking_uri(f"file:{ml_dirpath}")
 
     def __set_experiment(self):
 

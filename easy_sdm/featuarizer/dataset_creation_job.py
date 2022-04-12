@@ -112,12 +112,12 @@ class DatasetCreationJob:
     def save_dataset(self,species:Species, df:pd.DataFrame ,modellting_type:ModellingType, random_state:int = 42):
 
         df_train,df_valid,df_test = self.__split_dataset(df,random_state)
-        species_dataset_path = Path.cwd() / f"data/featuarizer/datasts/{species.get_name_for_paths()}/{modellting_type.value}"
+        species_dataset_path = Path.cwd() / f"data/featuarizer/datasets/{species.get_name_for_paths()}/{modellting_type.value}"
         species_dataset_path.mkdir(parents=True, exist_ok=True)
 
-        df_train.to_csv(species_dataset_path / "train.csv", index=False)
-        df_valid.to_csv(species_dataset_path / "valid.csv", index=False)
-        df_test.to_csv(species_dataset_path / "test.csv", index=False)
+        df_train.to_csv(species_dataset_path / "train.csv")
+        df_valid.to_csv(species_dataset_path / "valid.csv")
+        df_test.to_csv(species_dataset_path / "test.csv")
 
         vif_calculator = VIFCalculator(dataset_path=species_dataset_path / "train.csv", output_column='label')
         vif_calculator.calculate_vif()
@@ -126,9 +126,9 @@ class DatasetCreationJob:
         df_valid_vif = df_valid[vif_calculator.get_optimous_columns_with_label()]
         df_test_vif = df_test[vif_calculator.get_optimous_columns_with_label()]
 
-        df_train_vif.to_csv(species_dataset_path / "vif_train.csv", index=False)
-        df_valid_vif.to_csv(species_dataset_path / "vif_valid.csv", index=False)
-        df_test_vif.to_csv(species_dataset_path / "vif_test.csv", index=False)
+        df_train_vif.to_csv(species_dataset_path / "vif_train.csv")
+        df_valid_vif.to_csv(species_dataset_path / "vif_valid.csv")
+        df_test_vif.to_csv(species_dataset_path / "vif_test.csv")
 
         vif_decision_df = vif_calculator.get_vif_df()
         vif_decision_df.to_csv(f"data/output/vif_analysis/vif_{species.get_name_for_paths()}", index=False)

@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import pandas as pd
+import numpy as np
 import geopandas as gpd
 import rasterio
 from easy_sdm.configs import configs
@@ -29,6 +30,18 @@ class ShapefileLoader:
         shp_file_path = self.__get_shp_file()
         shp = gpd.read_file(shp_file_path)
         return shp
+
+class NumpyArrayLoader:
+    def __init__(
+        self, dataset_path: str,
+    ) -> None:
+        self.dataset_path = dataset_path
+
+    def load_dataset(self):
+
+        with open(self.dataset_path, 'rb') as f:
+            np_array = np.load(f)
+        return np_array
 
 
 class DatasetLoader:
