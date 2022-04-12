@@ -9,11 +9,7 @@ maps:
       east: -33.792929
       south: -34.750035
       north: 6.271478
-  # region_limits_with_security:
-  #     west: -76.000000
-  #     east: -65.000000
-  #     south: -56.000000
-  #     north: -17.000000
+
   no_data_val: -9999.0
   default_epsg: 4326
   resolution: 0.00833333333333334
