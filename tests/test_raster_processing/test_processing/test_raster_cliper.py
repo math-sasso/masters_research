@@ -4,10 +4,10 @@ import rasterio
 from pathlib import Path
 
 
-def test_clip_raster(tmp_path, mock_raw_raster_path):
+def test_clip_raster(tmp_path, mock_processed_raster_path_bioclim):
 
     output_path = tmp_path / "clipped_raster.tif"
-    raster = RasterLoader(mock_raw_raster_path).load_dataset()
+    raster = RasterLoader(mock_processed_raster_path_bioclim).load_dataset()
     RasterCliper().clip_and_save(
         source_raster=raster,
         output_path=PathUtils.file_path_existis(output_path),
@@ -15,4 +15,5 @@ def test_clip_raster(tmp_path, mock_raw_raster_path):
     loaded_raster = RasterLoader(output_path).load_dataset()
     assert Path(output_path).is_file()
     assert isinstance(loaded_raster, rasterio.io.DatasetReader)
-    assert loaded_raster.shape[0] > loaded_raster.shape[1]
+    # No Brasil a distancia W é um pouco maior que a distancia L
+    assert loaded_raster.shape[1] > loaded_raster.shape[0]

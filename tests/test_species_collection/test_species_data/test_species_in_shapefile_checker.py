@@ -1,7 +1,7 @@
 import geopandas as gpd
+from easy_sdm.typos import Species
 from easy_sdm.species_collection import (
     SpeciesInShapefileChecker,
-    Species,
     SpeciesGDFBuilder,
 )
 from easy_sdm.utils import ShapefileLoader

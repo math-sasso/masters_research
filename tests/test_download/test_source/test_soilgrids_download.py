@@ -4,11 +4,11 @@ from easy_sdm.download import SoilgridsDownloader
 from pathlib import Path
 
 
-def test_download_soilgrids(tmp_path, mock_processed_raster_path):
+def test_download_soilgrids(tmp_path, mock_processed_raster_path_bioclim):
     # TODO:create monkey patches
     variable = "clay"
     soilgrids_downloader = SoilgridsDownloader(
-        reference_raster_path=mock_processed_raster_path, root_dir=tmp_path
+        reference_raster_path=mock_processed_raster_path_bioclim, root_dir=tmp_path
     )
     soilgrids_downloader.set_soilgrids_requester(variable=variable)
     coverage_example = soilgrids_downloader.get_coverage_list()[3]

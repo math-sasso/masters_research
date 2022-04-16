@@ -1,15 +1,12 @@
-import pytest
-from easy_sdm.species_collection import SpeciesCollectionJob
-from easy_sdm.configs import configs
+from easy_sdm.utils import NumpyArrayLoader, PickleLoader
+from easy_sdm.environment import EnvironmentCreationJob
 from pathlib import Path
 
+def test_environment_creation_job(processed_raster_paths_list, mock_environment_dirpath):
 
-@pytest.mark.interface
-def test_species_collection_job(tmp_path, mock_map_shapefile_path):
-    species_dict = configs["species"]
-    species_id = species_dict["id"]
-    species_name = species_dict["name"]
-    job = SpeciesCollectionJob(
-        output_dirpath=tmp_path, region_shapefile_path=mock_map_shapefile_path
-    )
-    job.collect_species_data(species_id=species_id, species_name=species_name)
+    env_creation_job  = EnvironmentCreationJob(output_dirpath = mock_environment_dirpath, all_rasters_path_list=processed_raster_paths_list)
+    env_creation_job.build_environment()
+    environment_stack = NumpyArrayLoader(dataset_path=mock_environment_dirpath/"environment_stack.npy").load_dataset()
+    relevant_raster_list = PickleLoader(dataset_path=mock_environment_dirpath/"relevant_raster_list").load_dataset()
+    assert len(environment_stack.shape) == 3
+    assert Path.exists(relevant_raster_list[0])

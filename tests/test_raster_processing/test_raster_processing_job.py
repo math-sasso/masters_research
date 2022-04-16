@@ -1,38 +1,36 @@
-def test_raster_processing_job(tmp_path):
-
-    # TODO: Sera necessario refatorar o codigo
-    # do jeito que esta ou entao criar um path com a estrutura minima para chamar o job
-
-    # from easy_sdm.data_processing import RasterProcessingJob
-
-    # region_shapefile_path = tmp_path / "data/download/region_shapefile"
-    # processed_rasters_dir = tmp_path / "data/data_processing/processed_rasters"
-    # raw_rasters_dir = tmp_path / "data/download/raw_rasters"
-    # raster_processing_job = RasterProcessingJob(
-    #     processed_rasters_dir=processed_rasters_dir, raw_rasters_dir=raw_rasters_dir
-    # )
-
-    # raster_processing_job.process_rasters_from_all_sources()
-    # raster_processing_job.build_mask(
-    #     region_shapefile_path
-    # )
+import rasterio
+from easy_sdm.enums import RasterSource
+from easy_sdm.raster_processing import RasterProcessingJob
+from easy_sdm.utils import RasterLoader
 
 
-# def test_standarize_soilgrids_raster(tmp_path):
-#     """[Este teste esta dando errado
-#     Uma possivel solucao seria jogar todos os pontos 0.0 para -9999.0 e em seguida filtrar
-#     pelo mapa do brasil e jogar todos os que estivessem dentro para 0. Precisa pensar se
-#     isso faz sentido.
-#     ]
-#     """
+def test_raster_processing_job(root_test_data_path):
 
-#     raster_path = "data/raw/rasters/Soilgrids_Rasters/bdod/bdod_15-30cm_mean.tif"
-#     output_path = tmp_path / Path(raster_path).name
-#     raster_standarizer = RasterStandarizer()
-#     raster_standarizer.standarize_soilgrids(
-#         input_path=raster_path,
-#         output_path=output_path,
-#     )
-#     standarized_raster = rasterio.open(output_path)
+    raw_rasters_dir = root_test_data_path / "download/raw_rasters"
+    region_shapefile_path = root_test_data_path / "download/region_shapefile"
+    processed_rasters_dir = root_test_data_path / "raster_processing"
 
-#     assert np.min(standarized_raster.read(1)) is configs["maps"]["no_data_val"]
+    raster_processing_job = RasterProcessingJob(
+        processed_rasters_dir=processed_rasters_dir, raw_rasters_dir=raw_rasters_dir
+    )
+
+    raster_processing_job.process_rasters_from_source(RasterSource.Bioclim)
+    raster_processing_job.process_rasters_from_source(RasterSource.Soilgrids)
+    raster_processing_job.build_mask(region_shapefile_path)
+
+    processed_raster_bioclim = RasterLoader(
+        processed_rasters_dir
+        / "environment_variables_rasters"
+        / RasterSource.Bioclim.name
+        / "bio1_annual_mean_temperature.tif"
+    ).load_dataset()
+    processed_raster_soilgrids = RasterLoader(
+        processed_rasters_dir
+        / "environment_variables_rasters"
+        / RasterSource.Soilgrids.name
+        / "clay_0-5cm_mean.tif"
+    ).load_dataset()
+    region_mask = RasterLoader(processed_rasters_dir / "region_mask.tif").load_dataset()
+    assert isinstance(processed_raster_bioclim, rasterio.io.DatasetReader)
+    assert isinstance(processed_raster_soilgrids, rasterio.io.DatasetReader)
+    assert isinstance(region_mask, rasterio.io.DatasetReader)

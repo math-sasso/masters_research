@@ -11,7 +11,7 @@ def test_shapefile_loader(mock_map_shapefile_path):
     assert species_gdf.shape[0] > 0
 
 
-def test_raster_loader(mock_processed_raster_path):
-    raster = RasterLoader(mock_processed_raster_path).load_dataset()
+def test_raster_loader(mock_processed_raster_path_bioclim):
+    raster = RasterLoader(mock_processed_raster_path_bioclim).load_dataset()
 
     assert isinstance(raster, rasterio.io.DatasetReader)

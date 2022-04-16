@@ -2,8 +2,12 @@ from pathlib import Path
 
 import pandas as pd
 import pytest
-from easy_sdm.utils import PathUtils
 
+from easy_sdm.typos import Species
+
+@pytest.fixture
+def mock_species():
+    return Species(taxon_key=7587087,name="Cajanus cajan")
 ############################
 #           Paths          #
 ############################
@@ -21,55 +25,69 @@ from easy_sdm.utils import PathUtils
 #     )
 #     return processed_rasters_dirpath
 
+@pytest.fixture
+def root_test_data_path():
+    return Path.cwd() / "mock_data"
 
 @pytest.fixture
-def mock_species_shapefile_path():
-    path = Path.cwd() / "extras/mock_species"
+def mock_species_shapefile_path(root_test_data_path):
+    path = root_test_data_path / "species_collection/cajanus_cajan"
     return path
-
 
 @pytest.fixture
-def mock_map_shapefile_path():
-    path = Path.cwd() / "extras/mock_region_region_shapefile"
+def mock_map_shapefile_path(root_test_data_path):
+    path = root_test_data_path / "download/region_shapefile"
     return path
-
 
 @pytest.fixture
-def mock_processed_raster_path():
-    path = Path.cwd() / "extras/mock_processed_raster.tif"
+def mock_raw_raster_path_bioclim(root_test_data_path):
+    path = root_test_data_path / "download/raw_rasters/Bioclim/bio1_annual_mean_temperature.tif"
     return path
-
 
 @pytest.fixture
-def mock_raw_raster_path():
-    path = Path.cwd() / "extras/mock_raw_raster.tif"
+def mock_raw_raster_path_soilgrids(root_test_data_path):
+    path = root_test_data_path / "download/raw_rasters/Soilgrids/clay_0-5cm_mean.tif"
     return path
-
 
 @pytest.fixture
-def mock_mask_raster_path():
-    path = Path.cwd() / "extras/mock_region_mask.tif"
+def mock_processed_raster_path_bioclim(root_test_data_path):
+    path = root_test_data_path / "raster_processing/environment_variables_rasters/Bioclim/bio1_annual_mean_temperature.tif"
     return path
 
+@pytest.fixture
+def mock_processed_raster_path_soilgrids(root_test_data_path):
+    path = root_test_data_path / "raster_processing/environment_variables_rasters/Soilgrids/clay_0-5cm_mean.tif"
+    return path
+
+@pytest.fixture
+def mock_mask_raster_path(root_test_data_path):
+    path = root_test_data_path / "raster_processing/region_mask.tif"
+    return path
+
+@pytest.fixture
+def mock_environment_dirpath(root_test_data_path):
+    path = root_test_data_path / "environment"
+    return path
+
+@pytest.fixture
+def mock_featuarizer_dirpath(root_test_data_path):
+    path = root_test_data_path / "featuarizer"
+    return path
 
 ############################
 #           Lists          #
 ############################
 
-
 @pytest.fixture
-def processed_raster_paths_list(processed_rasters_dirpath):
-    raster_paths_list = PathUtils.get_rasters_filepaths_in_dir(
-        processed_rasters_dirpath
-    )
+def processed_raster_paths_list(mock_processed_raster_path_bioclim,mock_processed_raster_path_soilgrids):
+    raster_paths_list = [mock_processed_raster_path_bioclim,mock_processed_raster_path_soilgrids]
     return raster_paths_list
 
 
 @pytest.fixture
-def raw_raster_paths_list(raw_rasters_dirpath):
-    raster_paths_list = PathUtils.get_rasters_filepaths_in_dir(raw_rasters_dirpath)
+def raw_raster_paths_list(mock_raw_raster_path_bioclim,mock_raw_raster_path_soilgrids):
+    raster_paths_list = [mock_raw_raster_path_bioclim,mock_raw_raster_path_soilgrids]
     return raster_paths_list
-
 
 ############################
 #           Special          #
