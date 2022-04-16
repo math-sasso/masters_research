@@ -6,5 +6,12 @@ from easy_sdm.ml.models.tabnet import TabNet
 from easy_sdm.ml.models.xgboost import Xgboost, XgboostRF
 
 
-
-__all__ = ["BaseEstimator","GradientBoosting","MLP","OCSVM","TabNet","Xgboost","XgboostRF"]
+__all__ = [
+    "BaseEstimator",
+    "GradientBoosting",
+    "MLP",
+    "OCSVM",
+    "TabNet",
+    "Xgboost",
+    "XgboostRF",
+]

@@ -14,10 +14,9 @@ from .species_in_shapefile_checker import SpeciesInShapefileChecker
 class GBIFOccurencesRequester:
     """[This class makes request to GBIF]"""
 
-    def __init__(self, taxon_key: int, species_name: str):
+    def __init__(self, species: Species):
 
-        self.taxon_key = taxon_key
-        self.species_name = species_name
+        self.species = species
         self.base_url = "http://api.gbif.org/v1/occurrence/search"
 
     def request(self, offset: int = 0):
@@ -34,7 +33,7 @@ class GBIFOccurencesRequester:
 
         gbif_configs = configs["gbif"]
         params = {
-            "taxonKey": str(self.taxon_key),
+            "taxonKey": str(self.species.taxon_key),
             "limit": gbif_configs["one_request_limit"],
             "hasCoordinate": True,
             "year": f"{gbif_configs['low_year']},{gbif_configs['up_year']}",
@@ -59,9 +58,7 @@ class SpeciesDFBuilder:
     """[This class organize data requested to GBIF into pandas dataframes]"""
 
     def __init__(self, species: Species):
-        self.gbif_occ_requester = GBIFOccurencesRequester(
-            species.taxon_key, species.name
-        )
+        self.gbif_occ_requester = GBIFOccurencesRequester(species=species)
         self.__df_memory = None
 
     def get_specie_df(self):

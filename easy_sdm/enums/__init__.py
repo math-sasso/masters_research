@@ -7,5 +7,5 @@ __all__ = [
     "RasterSource",
     "PseudoSpeciesGeneratorType",
     "ModellingType",
-    "EstimatorType"
+    "EstimatorType",
 ]

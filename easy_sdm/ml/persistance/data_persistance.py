@@ -2,6 +2,7 @@ class DataPersistance:
     def __init__(self) -> None:
         pass
 
+
 # from pathlib import Path
 
 # import pandas as pd

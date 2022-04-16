@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class EstimatorType(Enum):
     Tabnet = "Tabnet"
     MLP = "MLP"

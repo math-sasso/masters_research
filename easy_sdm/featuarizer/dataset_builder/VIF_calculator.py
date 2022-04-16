@@ -6,15 +6,16 @@ from easy_sdm.utils import DatasetLoader
 
 
 class VIFCalculator:
-    def __init__(self, dataset_path:Path, output_column:str) -> None:
+    def __init__(self, dataset_path: Path, output_column: str) -> None:
         self.X = None
         self.dataset_path = dataset_path
         self.output_column = output_column
 
-
     def calculate_vif(self,):
-        dataloader = DatasetLoader(dataset_path=self.dataset_path,output_column=self.output_column)
-        X,self.y = dataloader.load_dataset()
+        dataloader = DatasetLoader(
+            dataset_path=self.dataset_path, output_column=self.output_column
+        )
+        X, self.y = dataloader.load_dataset()
         max = inf
         while max > 10:
             # VIF dataframe

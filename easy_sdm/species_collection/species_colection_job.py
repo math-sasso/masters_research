@@ -19,7 +19,7 @@ class SpeciesCollectionJob:
         self, species: Species,
     ):
         species_gdf_builder = SpeciesGDFBuilder(species, self.shp_region)
-        species_name = species.name.replace(" ", "_")
+        species_name = species.get_name_for_paths()
         dirpath = self.output_dirpath / species_name
         self.__build_empty_folders(dirpath)
         file_path = dirpath / f"{species_name}.shp"

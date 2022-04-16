@@ -3,7 +3,6 @@ from easy_sdm.configs import configs
 from easy_sdm.utils import RasterLoader, PathUtils
 from owslib.wcs import WebCoverageService
 from easy_sdm.utils import RasterUtils
-from rasterio.plot import show
 
 
 class SoilgridsDownloader:

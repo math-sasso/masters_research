@@ -4,16 +4,13 @@ from pathlib import Path
 
 
 class MLFlowPersistence:
-    def __init__(
-        self,
-        mlflow_experiment_name: str,
-    ) -> None:
+    def __init__(self, mlflow_experiment_name: str,) -> None:
         self.mlflow_experiment_name = mlflow_experiment_name
         self.__setup_mlflow()
         self.__set_experiment()
 
     def __setup_mlflow(self):
-        ml_dirpath = str(Path.cwd() / 'data/ml')
+        ml_dirpath = str(Path.cwd() / "data/ml")
         mlflow.set_tracking_uri(f"file:{ml_dirpath}")
 
     def __set_experiment(self):
@@ -28,7 +25,7 @@ class MLFlowPersistence:
         mlflow.log_metrics(metrics)
         # mlflow.log_artifact('roi_features.csv', artifact_path='features')
 
-    def persist(self, model, metrics: Dict, parameters: Dict, vif:str,end=True):
+    def persist(self, model, metrics: Dict, parameters: Dict, vif: str, end=True):
 
         if mlflow.active_run():
             mlflow.end_run()

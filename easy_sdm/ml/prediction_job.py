@@ -2,7 +2,8 @@ import numpy as np
 from easy_sdm.configs import configs
 from pathlib import Path
 
-class Prediction_Job():
+
+class Prediction_Job:
     def __init__(self) -> None:
         self.configs = configs
         self.environment_dirpath = Path.cwd() / "data/environment"

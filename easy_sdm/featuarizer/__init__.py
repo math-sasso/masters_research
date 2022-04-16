@@ -24,5 +24,5 @@ __all__ = [
     "BasePseudoSpeciesGenerator",
     "RandomPseudoSpeciesGenerator",
     "RSEPPseudoSpeciesGenerator",
-    "DatasetCreationJob"
+    "DatasetCreationJob",
 ]

@@ -200,35 +200,15 @@ class OccurrancesDatasetBuilder:
     def __get_var_names(self):
         return [Path(path).name.split(".")[0] for path in self.raster_path_list]
 
-    def __create_df(
-        self,
-        all_env_values_species_list: List[np.ndarray],
-        coordinates: List[np.ndarray],
-    ):
-        env_matrix = np.vstack(all_env_values_species_list)
-        complete_array = np.hstack([coordinates, env_matrix.T])
-        del env_matrix
-        del coordinates
-
-        columns = ["lat", "lon"] + self.__get_var_names()
-        df = pd.DataFrame(complete_array, columns=columns)
-        df = df.set_index(["lat", "lon"])
-
-        del complete_array
-        gc.collect()
-
-        return df
-
     def build(
-        self, species_gdf: gpd.GeoDataFrame,
+        self,
+        species_gdf: gpd.GeoDataFrame,
     ):
         """Save all extracted to a numpy array"""
 
         all_env_values_species_list = []
-        coordinates = SpeciesInfoExtractor(species_gdf).get_coordinates()
         for path in self.raster_path_list:
             raster = RasterLoader(path).load_dataset()
-
             self.species_env_extractor.set_env_layer(raster)
             self.species_env_extractor.set_species(species_gdf)
             raster_occurrences_array = self.species_env_extractor.extract()
@@ -237,6 +217,18 @@ class OccurrancesDatasetBuilder:
             del raster_occurrences_array
             gc.collect()
 
-        df = self.__create_df(all_env_values_species_list, coordinates)
-        df["label"] = 1
-        return df
+        occurrances_df = pd.DataFrame(
+            np.vstack(all_env_values_species_list).T, columns=self.__get_var_names()
+        )
+        occurrances_df["label"] = 1
+        self.dataset = occurrances_df
+        coordinates_df = pd.DataFrame(
+            SpeciesInfoExtractor(species_gdf).get_coordinates(), columns=["lat", "lon"]
+        )
+        self.coordinates_df = coordinates_df
+
+    def get_dataset(self):
+        return self.dataset
+
+    def get_coordinates_df(self):
+        return self.coordinates_df

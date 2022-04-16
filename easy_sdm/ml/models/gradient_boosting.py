@@ -1,7 +1,8 @@
 from sklearn.ensemble import GradientBoostingClassifier
 
+
 class GradientBoosting(GradientBoostingClassifier):
-    def __init__(self,**kwargs) -> None:
+    def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
         self.framework = "sklearn"
 
@@ -12,4 +13,4 @@ class GradientBoosting(GradientBoostingClassifier):
         return super().predict(x)
 
     def predict_adaptability(self, x):
-        return super().predict_proba(x)[:, 1]
+        return super().predict_proba(x)[:, 1].reshape(-1,1)

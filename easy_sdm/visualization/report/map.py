@@ -3,22 +3,26 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
-from easy_sdm.raster_processing.processing.raster_information_extractor import \
-    RasterInfoExtractor
+from easy_sdm.raster_processing.processing.raster_information_extractor import (
+    RasterInfoExtractor,
+)
 from typos import Species
 import matplotlib.colors as mcolors
 from easy_sdm.utils import NumpyArrayLoader
 
 
-
 class MapPlotter(object):
-    def __init__(self,species:Species) -> None:
+    def __init__(self, species: Species) -> None:
         self.species = species
         raster_processing_dirpath = Path.cwd() / "data/raster_processing"
-        self.country_mask_path = RasterInfoExtractor(raster_processing_dirpath / "region_mask.tif")
+        self.country_mask_path = RasterInfoExtractor(
+            raster_processing_dirpath / "region_mask.tif"
+        )
         self.info_extractor = RasterInfoExtractor(self.country_mask_path)
         self.enviroment_dirpath = Path.cwd() / "data/environment/environment_stack.npy"
-        self.enviroment_dirpath = Path.cwd() / "data/featuarizer/datasets/zea_mays/binary_classification"
+        self.enviroment_dirpath = (
+            Path.cwd() / "data/featuarizer/datasets/zea_mays/binary_classification"
+        )
 
     def create_Z(self):
 
@@ -68,37 +72,35 @@ class MapPlotter(object):
         )
 
     def create_result_adaptabilities_map(
-        self,
-        output_folder,
-        used_algorithim,
-        n_levels,
+        self, output_folder, used_algorithim, n_levels,
     ):
 
-        plt.figure(figsize=(8,8))
+        plt.figure(figsize=(8, 8))
 
         # Setting titles and labels
-        plt.title(f'Distribuição predita para a \nespécie {species_name}',fontsize=20)
-        plt.ylabel('Latitude[graus]',fontsize=18)
-        plt.xlabel('Longitude[graus]',fontsize=18)
+        plt.title(f"Distribuição predita para a \nespécie {species_name}", fontsize=20)
+        plt.ylabel("Latitude[graus]", fontsize=18)
+        plt.xlabel("Longitude[graus]", fontsize=18)
 
         # Plot country map
-        plt.contour(X, Y, land_reference,
-                            levels=[10], colors="k",
-                            linestyles="solid")
-
+        plt.contour(X, Y, land_reference, levels=[10], colors="k", linestyles="solid")
 
         # print('levels: ',levels)
         plt.contourf(X, Y, Z, levels=10, cmap=custom_cmap)
-        plt.colorbar(format='%.2f')
+        plt.colorbar(format="%.2f")
 
         # Saving results
         plt.legend(loc="upper right")
-        output_folder = os.path.join(results_folder,species_name)
-        output_folder = os.path.join(output_folder,used_algorithim)
+        output_folder = os.path.join(results_folder, species_name)
+        output_folder = os.path.join(output_folder, used_algorithim)
         utils_methods.create_folder_structure(output_folder)
-        plt.savefig(f'{output_folder}/land_map_final_prediction_{used_algorithim}_strategy.png')
+        plt.savefig(
+            f"{output_folder}/land_map_final_prediction_{used_algorithim}_strategy.png"
+        )
         plt.show()
         plt.clf()
 
     def create_result_adaptabilities_map_wtih_coords(self):
-        import pdb;pdb.set_trace()
+        import pdb
+
+        pdb.set_trace()

@@ -1,7 +1,8 @@
 from xgboost import XGBClassifier, XGBRFClassifier
 
+
 class Xgboost(XGBClassifier):
-    def __init__(self,**kwargs) -> None:
+    def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
         self.framework = "xgboost"
 
@@ -12,10 +13,11 @@ class Xgboost(XGBClassifier):
         return super().predict(x)
 
     def predict_adaptability(self, x):
-        return super().predict_proba(x)[:, 1]
+        return super().predict_proba(x)[:, 1].reshape(-1,1)
+
 
 class XgboostRF(XGBRFClassifier):
-    def __init__(self,**kwargs) -> None:
+    def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
         self.framework = "xgboost"
 
@@ -26,4 +28,4 @@ class XgboostRF(XGBRFClassifier):
         return super().predict(x)
 
     def predict_adaptability(self, x):
-        return super().predict_proba(x)[:, 1]
+        return super().predict_proba(x)[:, 1].reshape(-1,1)

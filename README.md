@@ -15,6 +15,11 @@ sudo docker run -it --rm --name easy_sdm -v $(pwd):/app easy_sdm
 sudo docker exec -it easy_sdm bash
 ```
 
+###  Set mlflow ui
+```bash
+mlflow ui --backend-store-uri file:/Users/msasso/Documents/Github/masters/masters_research/data/ml
+```
+
 ## Studied species:
 
 MILPA

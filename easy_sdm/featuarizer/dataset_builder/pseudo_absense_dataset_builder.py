@@ -2,11 +2,10 @@ from pathlib import Path
 
 import pandas as pd
 from easy_sdm.utils.data_loader import RasterLoader
-import rasterio
 from easy_sdm.configs import configs
 from easy_sdm.enums import PseudoSpeciesGeneratorType
 from .pseudo_species_generators import RSEPPseudoSpeciesGenerator
-from easy_sdm.environment import EnverionmentLayersStacker
+from easy_sdm.utils import NumpyArrayLoader
 
 
 class PseudoAbsensesDatasetBuilder:
@@ -30,9 +29,9 @@ class PseudoAbsensesDatasetBuilder:
 
         if self.ps_generator_type is PseudoSpeciesGeneratorType.RSEP:
             hyperparameters = configs["pseudo_species"]["RSEP"]
-            stacked_raster_coverages = EnverionmentLayersStacker().load(
+            stacked_raster_coverages = NumpyArrayLoader(
                 self.stacked_raster_coverages_path
-            )
+            ).load_dataset()
             ps_generator = RSEPPseudoSpeciesGenerator(
                 hyperparameters=hyperparameters,
                 region_mask_raster=region_mask_raster,
@@ -49,6 +48,15 @@ class PseudoAbsensesDatasetBuilder:
 
     def build(self, occurrence_df: pd.DataFrame, number_pseudo_absenses: int):
         self.ps_generator.fit(occurrence_df)
-        pseudo_absenses_df = self.ps_generator.generate(number_pseudo_absenses)
+        pseudo_absenses_df, coordinates_df = self.ps_generator.generate(
+            number_pseudo_absenses
+        )
         pseudo_absenses_df["label"] = 0
-        return pseudo_absenses_df
+        self.dataset = pseudo_absenses_df
+        self.coordinates_df = coordinates_df
+
+    def get_dataset(self):
+        return self.dataset
+
+    def get_coordinates_df(self):
+        return self.coordinates_df

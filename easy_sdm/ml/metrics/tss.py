@@ -8,7 +8,7 @@ class TSS(BaseMetric):
         self._maximize = True
 
     def __call__(self, y_true, y_score):
-        y_score = self.__adjust_y_score(y_score=y_score)
+        y_score = self._adjust_y_score(y_score=y_score)
         cm = confusion_matrix(y_true, (y_score >= 0.5).astype(int))
         TP = cm[1][1]
         TN = cm[0][0]

@@ -109,4 +109,6 @@ class RSEPPseudoSpeciesGenerator(BasePseudoSpeciesGenerator):
             pseudo_absenses_df = pseudo_absenses_df.append(
                 pseudo_absense_row, ignore_index=True
             )
-        return pseudo_absenses_df
+
+        coordinates_df = pd.DataFrame(np.array(x_y_chosed), columns=["lat", "lon"])
+        return pseudo_absenses_df, coordinates_df

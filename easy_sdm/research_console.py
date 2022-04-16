@@ -5,31 +5,31 @@ from typing import Optional
 import typer
 
 from easy_sdm import featuarizer
+from easy_sdm.typos import Species
 from easy_sdm.configs import configs
 from easy_sdm.download import DownloadJob
 from easy_sdm.enums import PseudoSpeciesGeneratorType
-from easy_sdm.environment import EnvironmentCreationJob, RelevantRastersSelector
 from easy_sdm.featuarizer import DatasetCreationJob
 from easy_sdm.raster_processing import RasterProcessingJob
-from easy_sdm.species_collection import Species, SpeciesCollectionJob
+from easy_sdm.species_collection import SpeciesCollectionJob
 from easy_sdm.utils import PathUtils
-from easy_sdm.utils.data_loader import ShapefileLoader
+from easy_sdm.utils.data_loader import ShapefileLoader, PickleLoader
 
 app = typer.Typer()
 
 milpa_species_dict = {
-    5290052:"Zea mays",
-    7393329:"Cucurbita moschata",
-    2874515:"Cucurbita maxima",
-    2874508:"Cucurbita pepo",
-    5350452:"Phaseolus vulgaris",
-    2982583:"Vigna unguiculata",
-    7587087:"Cajanus cajan",
-    3086357:"Piper nigrum",
-    2932944:"Capsicum annuum",
-    2932938:"Capsicum baccatum",
-    8403992:"Capsicum frutescens",
-    2932942:"Capsicum chinense",
+    5290052: "Zea mays",
+    7393329: "Cucurbita moschata",
+    2874515: "Cucurbita maxima",
+    2874508: "Cucurbita pepo",
+    5350452: "Phaseolus vulgaris",
+    2982583: "Vigna unguiculata",
+    7587087: "Cajanus cajan",
+    3086357: "Piper nigrum",
+    2932944: "Capsicum annuum",
+    2932938: "Capsicum baccatum",
+    8403992: "Capsicum frutescens",
+    2932942: "Capsicum chinense",
 }
 
 
@@ -58,9 +58,7 @@ def get_species_dataframe(species_name):
     raster_path_list_path = Path.cwd() / "data/environment/relevant_raster_list"
     ps_proportion = 0.5
     ps_generator_type = "RSEP"
-    raster_path_list = RelevantRastersSelector().load_raster_list(
-        raster_list_path=raster_path_list_path
-    )
+    raster_path_list = PickleLoader(raster_path_list_path).load_dataset()
     ps_generator_type = {
         "RSEP": PseudoSpeciesGeneratorType.RSEP,
         "Random": PseudoSpeciesGeneratorType.RSEP.Random,
@@ -106,7 +104,7 @@ def vif_all_species():
         region_shapefile_path=region_shapefile_path,
     )
 
-    for  id, name in milpa_species_dict.items():
+    for id, name in milpa_species_dict.items():
 
         species_dict = {"id": id, "name": name}
         job.collect_species_data(
@@ -142,7 +140,15 @@ def models_comparision():
     from sklearn.ensemble import GradientBoostingClassifier
     from sklearn.metrics import accuracy_score
 
-    df_result = pd.DataFrame(columns=['species_name','mlp','mlp_simplified','gradient_boosting','gradient_boosting_simplified'])
+    df_result = pd.DataFrame(
+        columns=[
+            "species_name",
+            "mlp",
+            "mlp_simplified",
+            "gradient_boosting",
+            "gradient_boosting_simplified",
+        ]
+    )
     datasets_dirpath = Path.cwd() / "data/featuarizer"
     vif_dirpath = Path.cwd() / "data/output/vif_analysis"
     for id, name in milpa_species_dict.items():
@@ -220,20 +226,32 @@ def models_comparision():
             y_pred=clf_mlp_simplified.predict(X_test_simplified),
         )
 
-        graient_boosting_result = accuracy_score(y_true=y_test, y_pred=clf_gradient_boosting.predict(X_test))
+        graient_boosting_result = accuracy_score(
+            y_true=y_test, y_pred=clf_gradient_boosting.predict(X_test)
+        )
         graient_boosting_result_simplified = accuracy_score(
             y_true=y_test_simplified,
             y_pred=clf_gradient_boosting_simplified.predict(X_test_simplified),
         )
 
-
-        df_result = df_result.append({'species_name':species_name,'mlp':mlp_result,'mlp_simplified':mlp_result_simplified,'gradient_boosting':graient_boosting_result,'gradient_boosting_simplified':graient_boosting_result_simplified}, ignore_index = True)
+        df_result = df_result.append(
+            {
+                "species_name": species_name,
+                "mlp": mlp_result,
+                "mlp_simplified": mlp_result_simplified,
+                "gradient_boosting": graient_boosting_result,
+                "gradient_boosting_simplified": graient_boosting_result_simplified,
+            },
+            ignore_index=True,
+        )
         # tabnet_result = accuracy_score(y_true=y_test, y_pred=clf_tabnet.predict(X_test))
         # tabnet_result_simplified = accuracy_score(
         #     y_true=y_test_simplified,
         #     y_pred=clf_tabnet_simplified.predict(X_test_simplified),
         # )
-    import pdb;pdb.set_trace()
+    import pdb
+
+    pdb.set_trace()
 
 
 if __name__ == "__main__":

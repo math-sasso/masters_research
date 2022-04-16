@@ -11,30 +11,34 @@ import typer
 
 from easy_sdm.download import DownloadJob
 from easy_sdm.enums import PseudoSpeciesGeneratorType, ModellingType
-from easy_sdm.environment import EnvironmentCreationJob, RelevantRastersSelector
+from easy_sdm.environment import EnvironmentCreationJob
 from easy_sdm.featuarizer import DatasetCreationJob
 from easy_sdm.raster_processing import RasterProcessingJob
 from easy_sdm.species_collection import SpeciesCollectionJob
 from easy_sdm.utils import PathUtils
-from easy_sdm.utils.data_loader import DatasetLoader, ShapefileLoader
+from easy_sdm.utils.data_loader import DatasetLoader, ShapefileLoader, PickleLoader
 from easy_sdm.ml import TrainJob
 from easy_sdm.typos import Species
+
 app = typer.Typer()
 
 milpa_species_dict = {
-    5290052:"Zea mays",
-    7393329:"Cucurbita moschata",
-    2874515:"Cucurbita maxima",
-    2874508:"Cucurbita pepo",
-    5350452:"Phaseolus vulgaris",
-    2982583:"Vigna unguiculata",
-    7587087:"Cajanus cajan",
-    3086357:"Piper nigrum",
-    2932944:"Capsicum annuum",
-    2932938:"Capsicum baccatum",
-    8403992:"Capsicum frutescens",
-    2932942:"Capsicum chinense",
+    5290052: "Zea mays",
+    7393329: "Cucurbita moschata",
+    2874515: "Cucurbita maxima",
+    2874508: "Cucurbita pepo",
+    5350452: "Phaseolus vulgaris",
+    2982583: "Vigna unguiculata",
+    7587087: "Cajanus cajan",
+    3086357: "Piper nigrum",
+    2932944: "Capsicum annuum",
+    2932938: "Capsicum baccatum",
+    8403992: "Capsicum frutescens",
+    2932942: "Capsicum chinense",
 }
+
+data_dirpath = Path.cwd() / "data"
+
 
 def version_callback(value: bool):
     if value:
@@ -58,7 +62,7 @@ def version(
 
 @app.command("download-data")
 def download_data():
-    raw_rasters_dirpath = Path.cwd() / "data/download/raw_rasters"
+    raw_rasters_dirpath = data_dirpath / "download/raw_rasters"
     download_job = DownloadJob(raw_rasters_dirpath=raw_rasters_dirpath)
     # download_job.download_shapefile_region()
     download_job.download_soigrids_rasters(coverage_filter="mean")
@@ -69,9 +73,9 @@ def download_data():
 @app.command("process-rasters")
 def process_rasters():
 
-    region_shapefile_path = Path.cwd() / "data/download/region_shapefile"
-    processed_rasters_dir = Path.cwd() / "data/raster_processing"
-    raw_rasters_dir = Path.cwd() / "data/download/raw_rasters"
+    region_shapefile_path = data_dirpath / "download/region_shapefile"
+    processed_rasters_dir = data_dirpath / "raster_processing"
+    raw_rasters_dir = data_dirpath / "download/raw_rasters"
 
     raster_processing_job = RasterProcessingJob(
         processed_rasters_dir=processed_rasters_dir, raw_rasters_dir=raw_rasters_dir
@@ -82,25 +86,21 @@ def process_rasters():
 
 
 @app.command("build-species-data")
-def build_species_data(
-    species_id: int = typer.Option(..., "--species-id", "-s"),
-):
-    output_dirpath = Path.cwd() / "data/species_collection"
-    region_shapefile_path = Path.cwd() / "data/download/region_shapefile"
-    species = Species(taxon_key=species_id,name=milpa_species_dict[species_id])
+def build_species_data(species_id: int = typer.Option(..., "--species-id", "-s"),):
+    output_dirpath = data_dirpath / "species_collection"
+    region_shapefile_path = data_dirpath / "download/region_shapefile"
+    species = Species(taxon_key=species_id, name=milpa_species_dict[species_id])
     job = SpeciesCollectionJob(
         output_dirpath=output_dirpath, region_shapefile_path=region_shapefile_path
     )
-    job.collect_species_data(
-        species=species
-    )
+    job.collect_species_data(species=species)
 
 
 @app.command("create-environment")
 def create_environment():
 
     processed_rasters_dir = (
-        Path.cwd() / "data/raster_processing/environment_variables_rasters"
+        data_dirpath / "raster_processing/environment_variables_rasters"
     )
 
     # tomar muito cuidado com essa lista porque a ordem fica baguncada
@@ -109,52 +109,43 @@ def create_environment():
         processed_rasters_dir
     )
 
-    output_dirpath = Path.cwd() / "data/environment"
+    output_dirpath = data_dirpath / "environment"
     env_creation_job = EnvironmentCreationJob(
         output_dirpath=output_dirpath, all_rasters_path_list=all_rasters_path_list
     )
     env_creation_job.build_environment()
 
+
 def create_dataset_by_specie(
-    species_id:int,
-    ps_generator_type:str=None,
-    ps_proportion:float=None,
+    species_id: int, ps_generator_type: str = None, ps_proportion: float = None,
 ):
-    species = Species(taxon_key=species_id,name=milpa_species_dict[species_id])
-
-
-    raster_path_list_path = Path.cwd() / "data/environment/relevant_raster_list"
-
-    raster_path_list = RelevantRastersSelector().load_raster_list(
-        raster_list_path=raster_path_list_path
-    )
+    species = Species(taxon_key=species_id, name=milpa_species_dict[species_id])
 
     ps_generator_type = {
         "RSEP": PseudoSpeciesGeneratorType.RSEP,
         "Random": PseudoSpeciesGeneratorType.Random,
     }.get(ps_generator_type, f"{ps_generator_type}' is not supported!")
 
-    featuarizer_dirpath = Path.cwd() / "data/featuarizer"
-    stacked_raster_coverages_path = (
-        Path.cwd() / "data/environment/environment_stack.npy"
-    )
-    region_mask_raster_path = Path.cwd() / "data/raster_processing/region_mask.tif"
-
-    sdm_dataset_creator = DatasetCreationJob(
-        raster_path_list=raster_path_list,
-        ps_generator_type=ps_generator_type,
-        ps_proportion=ps_proportion,
-        featuarizer_dirpath=featuarizer_dirpath,
-        region_mask_raster_path=region_mask_raster_path,
-        stacked_raster_coverages_path=stacked_raster_coverages_path,
-    )
+    sdm_dataset_creator = DatasetCreationJob(root_data_dirpath=data_dirpath)
 
     species_gdf = ShapefileLoader(
-        shapefile_path=Path.cwd() / Path("data/species_collection") / species.get_name_for_paths()
+        shapefile_path=data_dirpath
+        / "species_collection"
+        / species.get_name_for_paths()
     ).load_dataset()
 
-    df_sdm_bc = sdm_dataset_creator.create_binary_classification_dataset( species_gdf=species_gdf)
-    sdm_dataset_creator.save_dataset(species=species,df=df_sdm_bc,modellting_type=ModellingType.BinaryClassification)
+    df_sdm_bc, coords_df = sdm_dataset_creator.create_binary_classification_dataset(
+        species_gdf=species_gdf,
+        ps_proportion=ps_proportion,
+        ps_generator_type=ps_generator_type,
+    )
+    sdm_dataset_creator.save_dataset(
+        species=species,
+        sdm_df=df_sdm_bc,
+        coords_df=coords_df,
+        modellting_type=ModellingType.BinaryClassification,
+    )
+
 
 @app.command("create-dataset")
 def create_dataset(
@@ -166,25 +157,27 @@ def create_dataset(
     create_dataset_by_specie(
         species_id=species_id,
         ps_generator_type=ps_generator_type,
-        ps_proportion=ps_proportion
+        ps_proportion=ps_proportion,
     )
+
 
 @app.command("create-all-species-datasets")
 def create_dataset(
     ps_generator_type: str = typer.Option(..., "--ps-generator-type", "-t"),
     ps_proportion: float = typer.Option(..., "--ps-proportion", "-p"),
 ):
-    for species_id,_ in milpa_species_dict:
+    for species_id, _ in milpa_species_dict:
         create_dataset_by_specie(
             species_id=species_id,
             ps_generator_type=ps_generator_type,
-            ps_proportion=ps_proportion
+            ps_proportion=ps_proportion,
         )
+
 
 @app.command("train")
 def train(
     species_id: int = typer.Option(..., "--species-id", "-s"),
-    estimator_type : str =  typer.Option(..., "--estimator", "-e"),
+    estimator_type: str = typer.Option(..., "--estimator", "-e"),
 ):
     # estimator selection
     estimator_type = {
@@ -196,35 +189,45 @@ def train(
         "tabnet": EstimatorType.Tabnet,
         "ocsvm": EstimatorType.OCSVM,
         "autoencoder": EstimatorType.Autoencoder,
-
     }.get(estimator_type, f"{estimator_type}' is not supported!")
 
     # modellling Type slection
     modelling_type = {
-        EstimatorType.MLP : ModellingType.BinaryClassification,
-        EstimatorType.GradientBoosting : ModellingType.BinaryClassification,
-        EstimatorType.EnsembleForest : ModellingType.BinaryClassification,
-        EstimatorType.Xgboost : ModellingType.BinaryClassification,
-        EstimatorType.XgboostRF : ModellingType.BinaryClassification,
-        EstimatorType.Tabnet : ModellingType.BinaryClassification,
-        EstimatorType.OCSVM : ModellingType.AnomalyDetection,
-        EstimatorType.Autoencoder : ModellingType.AnomalyDetection,
+        EstimatorType.MLP: ModellingType.BinaryClassification,
+        EstimatorType.GradientBoosting: ModellingType.BinaryClassification,
+        EstimatorType.EnsembleForest: ModellingType.BinaryClassification,
+        EstimatorType.Xgboost: ModellingType.BinaryClassification,
+        EstimatorType.XgboostRF: ModellingType.BinaryClassification,
+        EstimatorType.Tabnet: ModellingType.BinaryClassification,
+        EstimatorType.OCSVM: ModellingType.AnomalyDetection,
+        EstimatorType.Autoencoder: ModellingType.AnomalyDetection,
     }.get(estimator_type, None)
 
     # useful info
-    species = Species(taxon_key=species_id,name=milpa_species_dict[species_id])
-    datasets_dirpath = Path.cwd() / f"data/featuarizer/datasets/{species.get_name_for_paths()}/{modelling_type.value}"
+    species = Species(taxon_key=species_id, name=milpa_species_dict[species_id])
+    dataset_dirpath = (
+        data_dirpath
+        / f"featuarizer/datasets/{species.get_name_for_paths()}/{modelling_type.value}"
+    )
     # dataloaders
-    train_data_loader = DatasetLoader(dataset_path=datasets_dirpath / "train.csv", output_column='label')
-    validation_data_loader = DatasetLoader(dataset_path=datasets_dirpath / "valid.csv", output_column='label')
-    vif_train_data_loader = DatasetLoader(dataset_path=datasets_dirpath / "vif_train.csv", output_column='label')
-    vif_validation_data_loader = DatasetLoader(dataset_path=datasets_dirpath / "vif_valid.csv", output_column='label')
-    import pdb;pdb.set_trace()
+    train_data_loader = DatasetLoader(
+        dataset_path=dataset_dirpath / "train.csv", output_column="label"
+    )
+    validation_data_loader = DatasetLoader(
+        dataset_path=dataset_dirpath / "valid.csv", output_column="label"
+    )
+    vif_train_data_loader = DatasetLoader(
+        dataset_path=dataset_dirpath / "vif_train.csv", output_column="label"
+    )
+    vif_validation_data_loader = DatasetLoader(
+        dataset_path=dataset_dirpath / "vif_valid.csv", output_column="label"
+    )
+
     # train job
     train_job = TrainJob(
-        train_data_loader = train_data_loader,
-        validation_data_loader = validation_data_loader,
-        estimator_type = estimator_type,
+        train_data_loader=train_data_loader,
+        validation_data_loader=validation_data_loader,
+        estimator_type=estimator_type,
         species=species,
     )
 
@@ -233,25 +236,28 @@ def train(
 
     train_job.vif_setup(
         vif_train_data_loader=vif_train_data_loader,
-        vif_validation_data_loader=vif_validation_data_loader
+        vif_validation_data_loader=vif_validation_data_loader,
     )
 
     train_job.fit()
     train_job.persist()
 
+
 @app.command("infer-map")
 def infer_map(
     species_id: int = typer.Option(..., "--species-id", "-s"),
-    estimator_type : str =  typer.Option(..., "--estimator", "-e"),
-    ):
+    estimator_type: str = typer.Option(..., "--estimator", "-e"),
+):
 
     pass
+
+
 @app.command("generate-results")
 def generate_results(
     species_id: int = typer.Option(..., "--species-id", "-s"),
-    map_generation : str =  typer.Option(..., "--map-generation", "-mg"),
-    model_comparison : bool =  typer.Option(..., "--model-comparison", "-mc"),
-    estimator_type : str =  typer.Option(..., "--estimator", "-e"),
+    map_generation: str = typer.Option(..., "--map-generation", "-mg"),
+    model_comparison: bool = typer.Option(..., "--model-comparison", "-mc"),
+    estimator_type: str = typer.Option(..., "--estimator", "-e"),
 ):
     pass
 

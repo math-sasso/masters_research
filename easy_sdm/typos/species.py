@@ -4,7 +4,7 @@ class Species:
         self.name = name
 
     def get_name_for_paths(self):
-        return self.name.replace(" ","_").lower()
+        return self.name.replace(" ", "_").lower()
 
     def get_name_for_plots(self):
         name_parts = self.name.strip().lower().split()
