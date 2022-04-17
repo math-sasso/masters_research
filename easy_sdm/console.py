@@ -6,6 +6,7 @@ from typing import Optional
 
 from setuptools import setup
 from easy_sdm.enums.estimator_type import EstimatorType
+from easy_sdm.ml.prediction_job import Prediction_Job
 
 import typer
 
@@ -39,6 +40,44 @@ milpa_species_dict = {
 
 data_dirpath = Path.cwd() / "data"
 
+# estimator selection
+def estimator_type_selector(estimator_type: str):
+    estimator_type = {
+        "mlp": EstimatorType.MLP,
+        "gradient_boosting": EstimatorType.GradientBoosting,
+        "ensemble_forest": EstimatorType.EnsembleForest,
+        "xgboost": EstimatorType.Xgboost,
+        "xgboostrf": EstimatorType.XgboostRF,
+        "tabnet": EstimatorType.Tabnet,
+        "ocsvm": EstimatorType.OCSVM,
+        "autoencoder": EstimatorType.Autoencoder,
+    }.get(estimator_type, f"{estimator_type}' is not supported!")
+    return estimator_type
+
+
+# modellling Type slection
+def modellling_type_selector(estimator_type: str):
+    modelling_type = {
+        EstimatorType.MLP: ModellingType.BinaryClassification,
+        EstimatorType.GradientBoosting: ModellingType.BinaryClassification,
+        EstimatorType.EnsembleForest: ModellingType.BinaryClassification,
+        EstimatorType.Xgboost: ModellingType.BinaryClassification,
+        EstimatorType.XgboostRF: ModellingType.BinaryClassification,
+        EstimatorType.Tabnet: ModellingType.BinaryClassification,
+        EstimatorType.OCSVM: ModellingType.AnomalyDetection,
+        EstimatorType.Autoencoder: ModellingType.AnomalyDetection,
+    }.get(estimator_type, None)
+    return modelling_type
+
+
+def ps_generator_type_selector(ps_generator_type):
+    ps_generator_type = {
+        "RSEP": PseudoSpeciesGeneratorType.RSEP,
+        "Random": PseudoSpeciesGeneratorType.Random,
+    }.get(ps_generator_type, f"{ps_generator_type}' is not supported!")
+
+    return ps_generator_type
+
 
 def version_callback(value: bool):
     if value:
@@ -51,7 +90,10 @@ def version_callback(value: bool):
 @app.callback("version")
 def version(
     version: Optional[bool] = typer.Option(
-        None, "--version", callback=version_callback, is_eager=True,
+        None,
+        "--version",
+        callback=version_callback,
+        is_eager=True,
     ),
 ):
     """
@@ -86,7 +128,9 @@ def process_rasters():
 
 
 @app.command("build-species-data")
-def build_species_data(species_id: int = typer.Option(..., "--species-id", "-s"),):
+def build_species_data(
+    species_id: int = typer.Option(..., "--species-id", "-s"),
+):
     output_dirpath = data_dirpath / "species_collection"
     region_shapefile_path = data_dirpath / "download/region_shapefile"
     species = Species(taxon_key=species_id, name=milpa_species_dict[species_id])
@@ -117,14 +161,13 @@ def create_environment():
 
 
 def create_dataset_by_specie(
-    species_id: int, ps_generator_type: str = None, ps_proportion: float = None,
+    species_id: int,
+    ps_generator_type: str = None,
+    ps_proportion: float = None,
 ):
     species = Species(taxon_key=species_id, name=milpa_species_dict[species_id])
 
-    ps_generator_type = {
-        "RSEP": PseudoSpeciesGeneratorType.RSEP,
-        "Random": PseudoSpeciesGeneratorType.Random,
-    }.get(ps_generator_type, f"{ps_generator_type}' is not supported!")
+    ps_generator_type = ps_generator_type_selector(ps_generator_type)
 
     sdm_dataset_creator = DatasetCreationJob(root_data_dirpath=data_dirpath)
 
@@ -179,30 +222,9 @@ def train(
     species_id: int = typer.Option(..., "--species-id", "-s"),
     estimator_type: str = typer.Option(..., "--estimator", "-e"),
 ):
-    # estimator selection
-    estimator_type = {
-        "mlp": EstimatorType.MLP,
-        "gradient_boosting": EstimatorType.GradientBoosting,
-        "ensemble_forest": EstimatorType.EnsembleForest,
-        "xgboost": EstimatorType.Xgboost,
-        "xgboostrf": EstimatorType.XgboostRF,
-        "tabnet": EstimatorType.Tabnet,
-        "ocsvm": EstimatorType.OCSVM,
-        "autoencoder": EstimatorType.Autoencoder,
-    }.get(estimator_type, f"{estimator_type}' is not supported!")
 
-    # modellling Type slection
-    modelling_type = {
-        EstimatorType.MLP: ModellingType.BinaryClassification,
-        EstimatorType.GradientBoosting: ModellingType.BinaryClassification,
-        EstimatorType.EnsembleForest: ModellingType.BinaryClassification,
-        EstimatorType.Xgboost: ModellingType.BinaryClassification,
-        EstimatorType.XgboostRF: ModellingType.BinaryClassification,
-        EstimatorType.Tabnet: ModellingType.BinaryClassification,
-        EstimatorType.OCSVM: ModellingType.AnomalyDetection,
-        EstimatorType.Autoencoder: ModellingType.AnomalyDetection,
-    }.get(estimator_type, None)
-
+    estimator_type = estimator_type_selector(estimator_type)
+    modelling_type = modellling_type_selector(modelling_type)
     # useful info
     species = Species(taxon_key=species_id, name=milpa_species_dict[species_id])
     dataset_dirpath = (
@@ -246,11 +268,17 @@ def train(
 @app.command("infer-map")
 def infer_map(
     species_id: int = typer.Option(..., "--species-id", "-s"),
-    estimator_type: str = typer.Option(..., "--estimator", "-e"),
+    run_id: str = typer.Option(..., "--run_id", "-r"),
 ):
-
-    pass
-
+    #TODO: selecionar o numero de features do vif. Vai precisar saber qual o numero da coluna que vai precisar filtrar
+    species = Species(taxon_key=species_id, name=milpa_species_dict[species_id])
+    prediction_job = Prediction_Job(data_dirpath=data_dirpath)
+    prediction_job.set_model(run_id=run_id,species=species)
+    Z = prediction_job.map_prediction()
+    import matplotlib.pyplot as plt
+    plt.imshow(Z, cmap='terrain')
+    plt.show()
+    import pdb;pdb.set_trace()
 
 @app.command("generate-results")
 def generate_results(

@@ -5,6 +5,7 @@ __pycache__/
 # Temporary folders
 /extras
 /mlruns
+/mock_data
 
 # C extensions
 *.so
@@ -93,3 +94,4 @@ target/
 .mypy_cache/
 /data
 /wheels
+/mock_data
