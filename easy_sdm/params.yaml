@@ -31,11 +31,10 @@ species:
   id: 7587087
   name: "Cajanus cajan"
 
-pseudo_species:
-  RSEP:
-    kernel: 'rbf'
-    gamma: 'scale'
-    nu: 0.5
+OCSVM:
+  kernel: 'rbf'
+  gamma: 'auto'
+  nu: 0.01
 
 model:
   binary_classification:

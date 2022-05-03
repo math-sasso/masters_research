@@ -1,6 +1,8 @@
 from pathlib import Path
 from typing import List
 
+from sqlalchemy import true
+
 import geopandas as gpd
 import pandas as pd
 from easy_sdm.enums import ModellingType, PseudoSpeciesGeneratorType
@@ -60,9 +62,7 @@ class DatasetCreationJob:
             self.root_data_dirpath / "environment/relevant_raster_list"
         )
         self.featuarizer_dirpath = self.root_data_dirpath / "featuarizer"
-        self.stacked_raster_coverages_path = (
-            self.root_data_dirpath / "environment/environment_stack.npy"
-        )
+
         self.region_mask_raster_path = (
             self.root_data_dirpath / "raster_processing/region_mask.tif"
         )
@@ -82,21 +82,22 @@ class DatasetCreationJob:
         self, species_gdf: gpd.GeoDataFrame,
     ):
 
-        self.psa_dataset_builder = PseudoAbsensesDatasetBuilder(
-            ps_generator_type=self.ps_generator_type,
-            region_mask_raster_path=self.region_mask_raster_path,
-            stacked_raster_coverages_path=self.stacked_raster_coverages_path,
-        )
-
         self.occ_dataset_builder.build(species_gdf)
         occ_df = self.occ_dataset_builder.get_dataset()
         coords_occ_df = self.occ_dataset_builder.get_coordinates_df()
         scaled_occ_df = self.min_max_scaler.scale_df(occ_df)
 
+        self.psa_dataset_builder = PseudoAbsensesDatasetBuilder(
+            root_data_dirpath=self.root_data_dirpath,
+            ps_generator_type=self.ps_generator_type,
+            scaled_occurrence_df=scaled_occ_df,
+            min_max_scaler = self.min_max_scaler
+        )
         number_pseudo_absenses = int(len(occ_df) * self.ps_proportion)
         self.psa_dataset_builder.build(
-            occurrence_df=scaled_occ_df, number_pseudo_absenses=number_pseudo_absenses
+            number_pseudo_absenses=number_pseudo_absenses
         )
+
         psa_df = self.psa_dataset_builder.get_dataset()
         coords_psa_df = self.psa_dataset_builder.get_coordinates_df()
         scaled_psa_df = self.min_max_scaler.scale_df(psa_df)
@@ -121,10 +122,11 @@ class DatasetCreationJob:
             import pdb
 
             pdb.set_trace()
+            df = df.sample(frac=1)
             df_occ = df[df["label"] == 1]
             df_psa = df[df["label"] == 0]
-            num_inference_data = len(df_train) * self.inference_proportion_from_all_data
-            df_train = df_occ[num_inference_data:].reset_index()
+            num_inference_data = int(len(df_occ) * self.inference_proportion_from_all_data)
+            df_train = df_occ[num_inference_data:].reset_index(drop=True)
             df_inference_occ = df_occ[:num_inference_data]
             df_inference_psa = df_psa[: len(df_inference_occ)]
             df_ = pd.concat([df_inference_psa, df_inference_occ], ignore_index=True)

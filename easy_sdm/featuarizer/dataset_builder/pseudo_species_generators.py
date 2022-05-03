@@ -37,27 +37,31 @@ class RSEPPseudoSpeciesGenerator(BasePseudoSpeciesGenerator):
 
     def __init__(self, **kwargs) -> None:
 
-        self.hyperparameters = kwargs.get("hyperparameters", None)
         self.region_mask_raster = kwargs.get("region_mask_raster", None)
         self.stacked_raster_coverages = kwargs.get("stacked_raster_coverages", None)
+        self.min_max_scaler = kwargs.get("min_max_scaler", None)
+
         self.__check_arguments()
         self.configs = configs
         self.inside_mask_idx = np.where(
             self.region_mask_raster.read(1) != configs["mask"]["negative_mask_val"]
         )
-        self.ocsvm = OCSVM(**self.hyperparameters)
+        self.ocsvm_configs = configs["OCSVM"]
+        self.ocsvm = OCSVM(**self.ocsvm_configs)
+
+
+
 
     def __check_arguments(self):
-        assert type(self.hyperparameters) is dict
         assert type(self.region_mask_raster) is rasterio.io.DatasetReader
         assert type(self.stacked_raster_coverages) is np.ndarray
 
-    def fit(self, occurrence_df: pd.DataFrame):
+    def fit(self, scaled_occurrence_df: pd.DataFrame):
         # Coords X and Y in two tuples where condition matchs (array(),array())
 
-        occurrence_df = occurrence_df.drop("label", axis=1)
-        self.ocsvm.fit(X_train=occurrence_df.values)
-        self.columns = occurrence_df.columns
+        scaled_occurrence_df = scaled_occurrence_df.drop("label", axis=1)
+        self.ocsvm.fit(X_train=scaled_occurrence_df.values)
+        self.columns = scaled_occurrence_df.columns
 
     def __get_decision_points(self):
         """[
@@ -85,10 +89,10 @@ class RSEPPseudoSpeciesGenerator(BasePseudoSpeciesGenerator):
         inside_country_values = self.stacked_raster_coverages[
             :, self.inside_mask_idx[0], self.inside_mask_idx[1]
         ].T
-        Z[self.inside_mask_idx[0], self.inside_mask_idx[1]] = self.ocsvm.predict(
-            inside_country_values
-        )
 
+        inside_country_values_scaled = self.min_max_scaler.scale_coverages(inside_country_values)
+        predicted_anomaly_detection = self.ocsvm.predict(inside_country_values_scaled)
+        Z[self.inside_mask_idx[0], self.inside_mask_idx[1]] = predicted_anomaly_detection
         return Z
 
     def generate(self, number_pseudo_absenses: int):
@@ -111,4 +115,5 @@ class RSEPPseudoSpeciesGenerator(BasePseudoSpeciesGenerator):
             )
 
         coordinates_df = pd.DataFrame(np.array(x_y_chosed), columns=["lat", "lon"])
+
         return pseudo_absenses_df, coordinates_df

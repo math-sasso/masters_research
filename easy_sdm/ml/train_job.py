@@ -1,8 +1,10 @@
 from pathlib import Path
 
 from easy_sdm.enums import EstimatorType
+from easy_sdm.ml.models import ocsvm
 from easy_sdm.typos import Species
 from easy_sdm.utils import DatasetLoader
+from configs import configs
 
 from .metrics import MetricsTracker
 from .models import (
@@ -143,7 +145,7 @@ class EstimatorSelector:
         elif self.estimator_type == EstimatorType.XgboostRF:
             estimator = XgboostRF(use_label_encoder=False)
         elif self.estimator_type == EstimatorType.OCSVM:
-            estimator = OCSVM(nu=0.01, kernel="rbf", gamma="auto")
+            estimator = OCSVM(nu=configs["OCSVM"]["nu"], kernel=configs["OCSVM"]["kernel"], gamma=configs["OCSVM"]["gamma"])
         else:
             raise ValueError("Use one of the possible estimators")
 

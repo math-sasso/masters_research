@@ -16,7 +16,6 @@ class SpeciesEnveriomentExtractor:
     """[This class extracts species information trought a set of raster layers that represent enverionmental conditions]"""
 
     def __init__(self):
-        self.configs = configs
 
         # Species related arguments
         self.__species_info_extractor = None
@@ -76,10 +75,10 @@ class SpeciesEnveriomentExtractor:
 
             state = "diagonal"
 
-            if pixel_value == self.configs["maps"]["no_data_val"]:
+            if pixel_value == configs["maps"]["no_data_val"]:
                 incx, incy = 0, 0
                 k = 0
-                while pixel_value == self.configs["maps"]["no_data_val"]:
+                while pixel_value == configs["maps"]["no_data_val"]:
 
                     if k % 50 == 0:
                         if state == "diagonal":
@@ -147,7 +146,7 @@ class SpeciesEnveriomentExtractor:
 
                     pixel_value = raster_array[-newy_point, newx_point]
 
-                    if pixel_value != self.configs["maps"]["no_data_val"]:
+                    if pixel_value != configs["maps"]["no_data_val"]:
                         raster_occurrences_array[i] = pixel_value
 
                     k += 1
