@@ -13,13 +13,14 @@ from .processing.raster_shapefile_burner import RasterShapefileBurner
 class RasterProcessingJob:
     """[A class that centralizes all RasterStandarization applications and take control over it]"""
 
-    def __init__(self, processed_rasters_dir: Path, raw_rasters_dir: Path) -> None:
+    def __init__(self, data_dirpath: Path) -> None:
         self.configs = configs
-        self.processed_rasters_dir = processed_rasters_dir
+        self.data_dirpath = data_dirpath
+        self.processed_rasters_dir = self.data_dirpath / "raster_processing"
         self.environment_variables_rasters = (
-            processed_rasters_dir / "environment_variables_rasters"
+            self.processed_rasters_dir / "environment_variables_rasters"
         )
-        self.raw_rasters_dir = raw_rasters_dir
+        self.raw_rasters_dir = self.data_dirpath / "download/raw_rasters"
         self.__build_empty_folders()
 
     def __build_empty_folders(self):
@@ -27,23 +28,28 @@ class RasterProcessingJob:
         for folder in folder_list:
             PathUtils.create_folder(self.environment_variables_rasters / folder)
 
-    def build_mask(self, shapefile_path: Path):
+    def build_mask(self):
         reference_raster_path = (
-            self.environment_variables_rasters
+            self.data_dirpath
+            / "download/raw_rasters"
             / RasterSource.Bioclim.name
             / "bio1_annual_mean_temperature.tif"
         )
         output_path = self.processed_rasters_dir / "region_mask.tif"
         reference_raster_path = PathUtils.file_path(reference_raster_path)
         raster = RasterLoader(reference_raster_path).load_dataset()
-        gdf = ShapefileLoader(shapefile_path).load_dataset()
+        gdf = ShapefileLoader(
+            self.data_dirpath / "download/region_shapefile"
+        ).load_dataset()
         raster_bunner = RasterShapefileBurner(reference_raster=raster)
         raster_bunner.burn_and_save(shapfile=gdf, output_path=output_path)
 
     def __standarize_soilgrids(self, input_path: Path, output_path: Path):
         PathUtils.create_folder(output_path.parents[0])
-        RasterDataStandarizer().standarize(
-            raster=rasterio.open(input_path), output_path=output_path
+        RasterDataStandarizer(self.data_dirpath).standarize(
+            raster=rasterio.open(input_path),
+            raster_source=RasterSource.Soilgrids,
+            output_path=output_path,
         )
 
     def __standarize_bioclim_envirem(self, input_path: Path, output_path: Path):
@@ -53,8 +59,10 @@ class RasterProcessingJob:
             source_raster=rasterio.open(input_path), output_path=raster_cliped_path
         )
         PathUtils.create_folder(output_path.parents[0])
-        RasterDataStandarizer().standarize(
-            raster=rasterio.open(raster_cliped_path), output_path=output_path
+        RasterDataStandarizer(self.data_dirpath).standarize(
+            raster=rasterio.open(raster_cliped_path),
+            raster_source=RasterSource.Bioclim,
+            output_path=output_path,
         )
 
     def process_rasters_from_all_sources(self):
@@ -65,6 +73,7 @@ class RasterProcessingJob:
     def process_rasters_from_source(
         self, raster_source: RasterSource,
     ):
+
         source_dirpath = self.raw_rasters_dir / raster_source.name
         destination_dirpath = self.environment_variables_rasters / raster_source.name
 

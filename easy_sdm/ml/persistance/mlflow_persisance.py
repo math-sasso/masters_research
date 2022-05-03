@@ -17,6 +17,7 @@ class MLFlowPersistence:
 
         if not mlflow.get_experiment_by_name(self.mlflow_experiment_name):
             mlflow.create_experiment(name=self.mlflow_experiment_name)
+        mlflow.set_experiment(self.mlflow_experiment_name)
 
     def __persist_logs(self, metrics: Dict, parameters: Dict):
         print(f"Logged Parameters {parameters}")

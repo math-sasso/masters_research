@@ -33,6 +33,10 @@ class MinMaxScalerWrapper:
         scaled_df["label"] = label
         return scaled_df
 
+    def scale_coverages(self, coverages: np.ndarray):
+        scaled_coverages = self.__scale(coverages)
+        return scaled_coverages
+
     def scale_stack(self, stack):
         stack = stack.transpose(1, 2, 0)
         stack_scaled = self.__scale(stack)

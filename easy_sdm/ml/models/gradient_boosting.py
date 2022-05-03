@@ -13,4 +13,4 @@ class GradientBoosting(GradientBoostingClassifier):
         return super().predict(x)
 
     def predict_adaptability(self, x):
-        return super().predict_proba(x)[:, 1].reshape(-1,1)
+        return super().predict_proba(x)[:, 1].reshape(-1, 1)

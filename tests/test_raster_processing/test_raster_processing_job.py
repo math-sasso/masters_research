@@ -6,17 +6,14 @@ from easy_sdm.utils import RasterLoader
 
 def test_raster_processing_job(root_test_data_path):
 
-    raw_rasters_dir = root_test_data_path / "download/raw_rasters"
-    region_shapefile_path = root_test_data_path / "download/region_shapefile"
     processed_rasters_dir = root_test_data_path / "raster_processing"
 
     raster_processing_job = RasterProcessingJob(
-        processed_rasters_dir=processed_rasters_dir, raw_rasters_dir=raw_rasters_dir
+        data_dirpath=root_test_data_path
     )
 
     raster_processing_job.process_rasters_from_source(RasterSource.Bioclim)
     raster_processing_job.process_rasters_from_source(RasterSource.Soilgrids)
-    raster_processing_job.build_mask(region_shapefile_path)
 
     processed_raster_bioclim = RasterLoader(
         processed_rasters_dir

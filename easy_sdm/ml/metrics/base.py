@@ -2,7 +2,6 @@ from pytorch_tabnet.metrics import Metric
 
 
 class BaseMetric(Metric):
-
     def _adjust_y_score(self, y_score):
         """Get only the positive probabilities
 

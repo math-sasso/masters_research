@@ -21,8 +21,17 @@ class DatasetCreationJob:
     [Create a dataset with species and pseudo spescies for SDM Machine Learning]
     """
 
-    def __init__(self, root_data_dirpath=Path) -> None:
+    def __init__(
+        self,
+        root_data_dirpath: Path,
+        ps_proportion: float,
+        ps_generator_type: PseudoSpeciesGeneratorType,
+    ) -> None:
 
+        self.inference_proportion_from_all_data = 0.2
+        self.test_proportion_from_inference_data = 0.5
+        self.ps_proportion = ps_proportion
+        self.ps_generator_type = ps_generator_type
         self.root_data_dirpath = root_data_dirpath
         self.__setup()
         self.__build_empty_folders()
@@ -69,15 +78,12 @@ class DatasetCreationJob:
             statistics_dataset=self.statistics_dataset,
         )
 
-    def create_binary_classification_dataset(
-        self,
-        species_gdf: gpd.GeoDataFrame,
-        ps_proportion: float,
-        ps_generator_type: PseudoSpeciesGeneratorType,
+    def create_general_dataset(
+        self, species_gdf: gpd.GeoDataFrame,
     ):
 
         self.psa_dataset_builder = PseudoAbsensesDatasetBuilder(
-            ps_generator_type=ps_generator_type,
+            ps_generator_type=self.ps_generator_type,
             region_mask_raster_path=self.region_mask_raster_path,
             stacked_raster_coverages_path=self.stacked_raster_coverages_path,
         )
@@ -87,7 +93,7 @@ class DatasetCreationJob:
         coords_occ_df = self.occ_dataset_builder.get_coordinates_df()
         scaled_occ_df = self.min_max_scaler.scale_df(occ_df)
 
-        number_pseudo_absenses = int(len(occ_df) * ps_proportion)
+        number_pseudo_absenses = int(len(occ_df) * self.ps_proportion)
         self.psa_dataset_builder.build(
             occurrence_df=scaled_occ_df, number_pseudo_absenses=number_pseudo_absenses
         )
@@ -99,15 +105,35 @@ class DatasetCreationJob:
 
         return scaled_df, coords_df
 
-    def create_anomaly_detection_dataset(species_gdf: gpd.GeoDataFrame):
-        # Avaliar se faz sentido criar subclasses
-        raise NotImplementedError()
+    def __split_dataset(
+        self, df: pd.DataFrame, random_state: int, modellting_type: ModellingType
+    ):
 
-    def __split_dataset(self, df: pd.DataFrame, random_state: int):
+        # spliting between train and inference
+        if modellting_type == ModellingType.BinaryClassification:
+            df_train, df_ = train_test_split(
+                df,
+                test_size=self.inference_proportion_from_all_data,
+                random_state=random_state,
+            )
 
-        df_train, df_ = train_test_split(df, test_size=0.2, random_state=random_state)
+        elif modellting_type == ModellingType.AnomalyDetection:
+            import pdb
+
+            pdb.set_trace()
+            df_occ = df[df["label"] == 1]
+            df_psa = df[df["label"] == 0]
+            num_inference_data = len(df_train) * self.inference_proportion_from_all_data
+            df_train = df_occ[num_inference_data:].reset_index()
+            df_inference_occ = df_occ[:num_inference_data]
+            df_inference_psa = df_psa[: len(df_inference_occ)]
+            df_ = pd.concat([df_inference_psa, df_inference_occ], ignore_index=True)
+            df_.index = pd.RangeIndex(len(df_train), len(df_train) + len(df_))
+        # spliting between validation and test
         df_valid, df_test = train_test_split(
-            df_, test_size=0.5, random_state=random_state
+            df_,
+            test_size=self.test_proportion_from_inference_data,
+            random_state=random_state,
         )
 
         return df_train, df_valid, df_test
@@ -133,7 +159,9 @@ class DatasetCreationJob:
         random_state: int = 42,
     ):
 
-        df_train, df_valid, df_test = self.__split_dataset(sdm_df, random_state)
+        df_train, df_valid, df_test = self.__split_dataset(
+            sdm_df, random_state, modellting_type
+        )
         (
             coords_df_train,
             coords_df_valid,

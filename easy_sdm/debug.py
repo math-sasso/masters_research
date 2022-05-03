@@ -1,13 +1,22 @@
-from data.shapefile import SpeciesInShapefileChecker
-from data.gbif import Species
+from easy_sdm.utils import RasterLoader
+from easy_sdm.visualization.debug_plots import RasterPlotter
 from pathlib import Path
 
-mays_code = 5290052
-mays = Species(taxon_key=5290052, species_name="Zea mays")
-mays_gdf = mays.get_species_gdf()
-brazil_shapefile_path = Path.cwd() / "data/raw/shapefiles_brasil/level_0/BRA_adm0.shp"
-shp_region = SpeciesInShapefileChecker(brazil_shapefile_path)
-teste_gdf = shp_region.get_points_inside(mays_gdf)
+
+raw_raster = (
+    RasterLoader("data/download/raw_rasters/Soilgrids/bdod/bdod_5-15cm_mean.tif")
+    .load_dataset()
+    .read(1)
+)
+processed_raster = (
+    RasterLoader(
+        "data/raster_processing/environment_variables_rasters/Soilgrids/bdod_0-5cm_mean.tif"
+    )
+    .load_dataset()
+    .read(1)
+)
+
 import pdb
 
 pdb.set_trace()
+RasterPlotter.plot(processed_raster)

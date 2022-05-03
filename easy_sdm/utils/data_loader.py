@@ -58,7 +58,7 @@ class PickleLoader:
 
 class DatasetLoader:
     def __init__(
-        self, dataset_path: str, output_column: str, output_format: str = "pandas"
+        self, dataset_path: str, output_column: str = "", output_format: str = "pandas"
     ) -> None:
         self.dataset_path = dataset_path
         self.output_column = output_column

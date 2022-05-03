@@ -4,15 +4,11 @@ from typing import Optional
 
 import typer
 
-from easy_sdm import featuarizer
 from easy_sdm.typos import Species
 from easy_sdm.configs import configs
-from easy_sdm.download import DownloadJob
 from easy_sdm.enums import PseudoSpeciesGeneratorType
 from easy_sdm.featuarizer import DatasetCreationJob
-from easy_sdm.raster_processing import RasterProcessingJob
 from easy_sdm.species_collection import SpeciesCollectionJob
-from easy_sdm.utils import PathUtils
 from easy_sdm.utils.data_loader import ShapefileLoader, PickleLoader
 
 app = typer.Typer()

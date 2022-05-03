@@ -13,7 +13,7 @@ class Xgboost(XGBClassifier):
         return super().predict(x)
 
     def predict_adaptability(self, x):
-        return super().predict_proba(x)[:, 1].reshape(-1,1)
+        return super().predict_proba(x)[:, 1].reshape(-1, 1)
 
 
 class XgboostRF(XGBRFClassifier):
@@ -28,4 +28,4 @@ class XgboostRF(XGBRFClassifier):
         return super().predict(x)
 
     def predict_adaptability(self, x):
-        return super().predict_proba(x)[:, 1].reshape(-1,1)
+        return super().predict_proba(x)[:, 1].reshape(-1, 1)

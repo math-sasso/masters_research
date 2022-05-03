@@ -1,106 +1,92 @@
 import os
 from pathlib import Path
 
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
+from easy_sdm.enums import EstimatorType
 from easy_sdm.raster_processing.processing.raster_information_extractor import (
     RasterInfoExtractor,
 )
+from easy_sdm.utils.path_utils import PathUtils
 from typos import Species
-import matplotlib.colors as mcolors
-from easy_sdm.utils import NumpyArrayLoader
 
 
 class MapPlotter(object):
-    def __init__(self, species: Species) -> None:
+    def __init__(self, species: Species, data_dirpath: Path) -> None:
         self.species = species
-        raster_processing_dirpath = Path.cwd() / "data/raster_processing"
-        self.country_mask_path = RasterInfoExtractor(
-            raster_processing_dirpath / "region_mask.tif"
+        self.data_dirpath = data_dirpath
+        self.info_extractor = RasterInfoExtractor(
+            data_dirpath / "raster_processing/region_mask.tif"
         )
-        self.info_extractor = RasterInfoExtractor(self.country_mask_path)
-        self.enviroment_dirpath = Path.cwd() / "data/environment/environment_stack.npy"
-        self.enviroment_dirpath = (
-            Path.cwd() / "data/featuarizer/datasets/zea_mays/binary_classification"
-        )
+        self.__setup_vectors()
+        self.__setup_colormap()
 
-    def create_Z(self):
-
-        # stacked_raster_coverages = utils_methods.retrieve_data_from_np_array(stacked_environment_rasters_array_path)
-        # idx = np.where(land_reference == raster_utils.positive_mask_val) # Coords X and Y in two tuples where condition matchs (array(),array())
-        # brazil_vars_mean_std_df = pd.read_csv(mean_std_path)
-        # mean_vars = np.float32(brazil_vars_mean_std_df['mean'].to_numpy())
-        # std_vars = np.float32(brazil_vars_mean_std_df['std'].to_numpy())
-
-        # stacked_raster_coverages_shape = stacked_raster_coverages.shape
-        # raster_coverages_land = stacked_raster_coverages[:, idx[0], idx[1]].T
-        # for k in range(raster_coverages_land.shape[1]):
-        # raster_coverages_land[:,k][raster_coverages_land[:,k]<= raster_utils.no_data_val] = mean_vars[k]
-        # del stacked_raster_coverages
-
-        # scaled_coverages_land = (raster_coverages_land - mean_vars) / std_vars
-        # scaled_coverages_land[np.isnan(scaled_coverages_land)] = 0
-        # del raster_coverages_land
-
-        # global_pred = loaded_model.predict(x=scaled_coverages_land) ###predict output value (N,38)
-
-        # Z= np.ones((stacked_raster_coverages_shape[1], stacked_raster_coverages_shape[2]), dtype=np.float32)
-        # # Z *= global_pred.min()
-        # # Z *=-1 #This will be necessary to set points outside map to the minimum
-        # Z*= self.configs["maps"]["no_data_val"] #This will be necessary to set points outside map to the minimum
-        # Z[idx[0], idx[1]] = global_pred.ravel()
-        # Z[Z == raster_utils.no_data_val] = -0.001
-
-        # return Z
-        pass
-
-    def setup(self):
+    def __setup_vectors(self):
 
         xgrid = self.info_extractor.get_xgrid()
         ygrid = self.info_extractor.get_ygrid()
-        land_reference_array = self.info_extractor.get_array()
-
-        # Getting Meshgrids
-        # X, Y = np.meshgrid(xgrid, ygrid[::-1])
 
         X, Y = xgrid, ygrid[::-1]
 
-        plt.figure(figsize=(8, 8))
-        Z = NumpyArrayLoader()
-        Z = utils_methods.retrieve_data_from_np_array(
-            os.path.join(fold, "Land_Prediction.npy")
-        )
+        self.X = X
+        self.Y = Y
+        self.land_reference_array = self.info_extractor.get_array()
+
+    def __setup_colormap(self):
+        norm = matplotlib.colors.Normalize(-0.001, 1)
+        colors = [
+            [norm(-0.001), "white"],
+            [norm(0.15), "0.95"],
+            [norm(0.2), "sienna"],
+            [norm(0.3), "wheat"],
+            [norm(0.5), "cornsilk"],
+            [norm(0.95), "yellowgreen"],
+            [norm(1.0), "green"],
+        ]
+
+        custom_cmap = matplotlib.colors.LinearSegmentedColormap.from_list("", colors)
+        custom_cmap.set_bad(color="white")
+        self.custom_cmap = custom_cmap
 
     def create_result_adaptabilities_map(
-        self, output_folder, used_algorithim, n_levels,
+        self, Z: np.ndarray, estimator_type: EstimatorType, run_id: str,
     ):
 
         plt.figure(figsize=(8, 8))
 
         # Setting titles and labels
-        plt.title(f"Distribuição predita para a \nespécie {species_name}", fontsize=20)
+        plt.title(
+            f"Distribuição predita para a \nespécie {self.species.get_name_for_plots()}\n algoritimo {estimator_type.name}",
+            fontsize=20,
+        )
         plt.ylabel("Latitude[graus]", fontsize=18)
         plt.xlabel("Longitude[graus]", fontsize=18)
 
         # Plot country map
-        plt.contour(X, Y, land_reference, levels=[10], colors="k", linestyles="solid")
+        plt.contour(
+            self.X,
+            self.Y,
+            self.land_reference_array,
+            levels=[10],
+            colors="k",
+            linestyles="solid",
+        )
 
         # print('levels: ',levels)
-        plt.contourf(X, Y, Z, levels=10, cmap=custom_cmap)
+        plt.contourf(self.X, self.Y, Z, levels=10, cmap=self.custom_cmap)
         plt.colorbar(format="%.2f")
 
         # Saving results
         plt.legend(loc="upper right")
-        output_folder = os.path.join(results_folder, species_name)
-        output_folder = os.path.join(output_folder, used_algorithim)
-        utils_methods.create_folder_structure(output_folder)
-        plt.savefig(
-            f"{output_folder}/land_map_final_prediction_{used_algorithim}_strategy.png"
+        output_dirpath = (
+            self.data_dirpath / f"output/{self.species.get_name_for_paths()}"
         )
+        PathUtils.create_folder(output_dirpath)
+        output_path = output_dirpath / f"{estimator_type.name}_{run_id}"
+        plt.savefig(output_path)
         plt.show()
         plt.clf()
 
     def create_result_adaptabilities_map_wtih_coords(self):
-        import pdb
-
-        pdb.set_trace()
+        raise NotImplementedError()

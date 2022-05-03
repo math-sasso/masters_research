@@ -1,24 +1,78 @@
 from pathlib import Path
+from typing import Dict, List
 
 import numpy as np
 from easy_sdm.configs import configs
+from easy_sdm.enums import RasterSource
 from easy_sdm.utils import RasterUtils
+from easy_sdm.utils.data_loader import RasterLoader
+from scipy.interpolate import NearestNDInterpolator
+from easy_sdm.visualization.debug_plots import RasterPlotter
+
+
+class RasterMissingValueFiller:
+    """solution based in:
+    https://stackoverflow.com/questions/68197762/fill-nan-with-nearest-neighbor-in-numpy-array
+    """
+
+    def __init__(self) -> None:
+        pass
+
+    def fill_missing_values(self, data: np.ndarray, no_value_list: List[float]):
+        for no_val in no_value_list:
+            data[data == no_val] = np.nan
+
+        mask = np.where(~np.isnan(data))
+        interp = NearestNDInterpolator(np.transpose(mask), data[mask])
+        filled_data = interp(*np.indices(data.shape))
+        return filled_data
 
 
 class RasterDataStandarizer:
     """[A class to perform expected standarizations]"""
 
-    def __init__(self,) -> None:
+    def __init__(self, data_dirpath) -> None:
         self.configs = configs
+        self.data_dirpath = data_dirpath
+        self.region_mask_array = (
+            RasterLoader(data_dirpath / "raster_processing/region_mask.tif")
+            .load_dataset()
+            .read(1)
+        )
+        self.inputer = RasterMissingValueFiller()
 
-    def standarize(self, raster, output_path: Path):
+    def __standarize_country_borders(self, data: np.ndarray):
+
+        data = np.where(
+            self.region_mask_array == configs["maps"]["no_data_val"],
+            configs["maps"]["no_data_val"],
+            data,
+        )
+
+        return data
+
+    def __standarize_no_data_val(self, profile: Dict, data: np.ndarray):
+
+        data = np.where(
+            data == profile["nodata"], configs["maps"]["no_data_val"], data,
+        )
+
+        return data
+
+    def standarize(self, raster, raster_source: RasterSource, output_path: Path):
         profile = raster.profile.copy()
         data = raster.read(1)
         height, width = data.shape
         data = np.float32(data)
-        data = np.where(
-            data == profile["nodata"], configs["maps"]["no_data_val"], data,
-        )
+
+        if raster_source in [RasterSource.Envirem, RasterSource.Bioclim]:
+            # profile = self.__set_no_data_key_for_soilgrids_rasters(profile)
+            data = self.__standarize_country_borders(data)
+            data = self.__standarize_no_data_val(profile, data)
+
+        elif raster_source == RasterSource.Soilgrids:
+            data = self.__standarize_country_borders(data)
+            data = self.inputer.fill_missing_values(data=data, no_value_list=[0])
 
         profile.update(
             {

@@ -201,8 +201,7 @@ class OccurrancesDatasetBuilder:
         return [Path(path).name.split(".")[0] for path in self.raster_path_list]
 
     def build(
-        self,
-        species_gdf: gpd.GeoDataFrame,
+        self, species_gdf: gpd.GeoDataFrame,
     ):
         """Save all extracted to a numpy array"""
 

@@ -15,4 +15,4 @@ class OCSVM(OneClassSVM):
         return super().predict(x)
 
     def predict_adaptability(self, x):
-        return super().decision_function(x).reshape(-1,1)
+        return super().decision_function(x).reshape(-1, 1)
