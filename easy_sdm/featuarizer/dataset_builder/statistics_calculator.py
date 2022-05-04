@@ -6,6 +6,33 @@ import rasterio
 from easy_sdm.configs import configs
 
 
+class DataframeStatisticsCalculator:
+    def __init__(self, df: pd.DataFrame,) -> None:
+        df = df.drop("label", axis=1)
+        self.df = df
+
+    def build_table(self, output_path: Path):
+        stats_df = pd.DataFrame(
+            columns=["raster_name", "min", "max", "mean", "std", "median"]
+        )
+        for col in self.df.columns:
+            column_info = self.df[col]
+
+            stats_df = stats_df.append(
+                {
+                    "raster_name": col,
+                    "min": np.min(column_info),
+                    "max": np.max(column_info),
+                    "mean": np.mean(column_info),
+                    "std": np.std(column_info),
+                    "median": np.median(column_info),
+                },
+                ignore_index=True,
+            )
+
+        stats_df.to_csv(output_path, index=False)
+
+
 class RasterStatisticsCalculator:
     """[A class to extract basic statistics from rasters considering only the masked territorry]
 

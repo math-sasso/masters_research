@@ -15,10 +15,305 @@ from sklearn.model_selection import train_test_split
 from .dataset_builder.occurrence_dataset_builder import OccurrancesDatasetBuilder
 from .dataset_builder.pseudo_absense_dataset_builder import PseudoAbsensesDatasetBuilder
 from .dataset_builder.scaler import MinMaxScalerWrapper
-from .dataset_builder.statistics_calculator import RasterStatisticsCalculator
+from .dataset_builder.statistics_calculator import (
+    RasterStatisticsCalculator,
+    DataframeStatisticsCalculator,
+)
 
 
 class DatasetCreationJob:
+    """
+    [Create a dataset with species and pseudo spescies for SDM Machine Learning]
+    """
+
+    def __init__(
+        self,
+        root_data_dirpath: Path,
+        species: Species,
+        species_gdf: gpd.GeoDataFrame,
+        ps_proportion: float,
+        ps_generator_type: PseudoSpeciesGeneratorType,
+        modelling_type: ModellingType,
+    ) -> None:
+
+        self.inference_proportion_from_all_data = 0.2
+        self.test_proportion_from_inference_data = 0.5
+
+        self.root_data_dirpath = root_data_dirpath
+        self.species = species
+        self.species_gdf = species_gdf
+        self.ps_proportion = ps_proportion
+        self.ps_generator_type = ps_generator_type
+        self.modelling_type = modelling_type
+        self.random_state = 42
+
+        self.__setup()
+        self.__build_empty_folders()
+
+        self.train_occ = None
+        self.val_occ = None
+        self.test_occ = None
+
+        self.train_psa = None
+        self.val_psa = None
+        self.test_psa = None
+
+    def __build_empty_folders(self):
+        PathUtils.create_folder(self.featuarizer_dirpath)
+
+    def __setup(self):
+
+        self.species_dataset_path = (
+            self.root_data_dirpath
+            / f"featuarizer/datasets/{self.species.get_name_for_paths()}"
+        )
+        self.species_dataset_path.mkdir(parents=True, exist_ok=True)
+
+        self.raster_path_list_path = (
+            self.root_data_dirpath / "environment/relevant_raster_list"
+        )
+        self.featuarizer_dirpath = self.root_data_dirpath / "featuarizer"
+
+        self.region_mask_raster_path = (
+            self.root_data_dirpath / "raster_processing/region_mask.tif"
+        )
+
+        self.raster_path_list = PickleLoader(self.raster_path_list_path).load_dataset()
+
+        statistics_dataset = (
+            self.__create_statistics_dataset()
+        )  # apenas a patir do treino
+        self.min_max_scaler = MinMaxScalerWrapper(
+            statistics_dataset=statistics_dataset,
+        )
+
+        self.occ_dataset_builder = OccurrancesDatasetBuilder(
+            raster_path_list=self.raster_path_list,
+        )
+
+    def __split_dataset(
+        self, df: pd.DataFrame,
+    ):
+
+        df_train, df_ = train_test_split(
+            df,
+            test_size=self.inference_proportion_from_all_data,
+            random_state=self.random_state,
+        )
+        df_valid, df_test = train_test_split(
+            df_,
+            test_size=self.test_proportion_from_inference_data,
+            random_state=self.random_state,
+        )
+
+        return df_train, df_valid, df_test
+
+    def __reflect_split_from_other_dataset(
+        self,
+        input_df: pd.DataFrame,
+        sdm_df_train: pd.DataFrame,
+        sdm_df_valid: pd.DataFrame,
+        sdm_df_test: pd.DataFrame,
+    ):
+        input_df_train = input_df.iloc[list(sdm_df_train.index)]
+        input_df_valid = input_df.iloc[list(sdm_df_valid.index)]
+        input_df_test = input_df.iloc[list(sdm_df_test.index)]
+        return input_df_train, input_df_valid, input_df_test
+
+    def __create_statistics_dataset(self):
+
+        # raster_statistics_calculator = DataframeStatisticsCalculator(
+        #     df=df,
+        # )
+        # statistics_dataset_path = self.species_dataset_path / 'statistics.csv'
+
+        statistics_dataset_path = self.species_dataset_path / "raster_statistics.csv"
+
+        raster_statistics_calculator = RasterStatisticsCalculator(
+            raster_path_list=self.raster_path_list,
+            mask_raster_path=self.region_mask_raster_path,
+        )
+        raster_statistics_calculator.build_table(statistics_dataset_path)
+
+        statistics_dataset = pd.read_csv(statistics_dataset_path)
+
+        return statistics_dataset
+
+    def __create_occ_df(self):
+
+        self.occ_dataset_builder.build(self.species_gdf)
+        occ_df = self.occ_dataset_builder.get_dataset()
+        coords_occ_df = self.occ_dataset_builder.get_coordinates_df()
+
+        scaled_occ_df = self.min_max_scaler.scale_df(occ_df)
+        (
+            scaled_train_occ_df,
+            scaled_val_occ_df,
+            scaled_test_occ_df,
+        ) = self.__split_dataset(scaled_occ_df)
+
+        (
+            train_coords_occ_df,
+            val_coords_occ_df,
+            test_coords_occ_df,
+        ) = self.__reflect_split_from_other_dataset(
+            coords_occ_df, scaled_train_occ_df, scaled_val_occ_df, scaled_test_occ_df
+        )
+
+        self.scaled_train_occ_df = scaled_train_occ_df
+        self.scaled_val_occ_df = scaled_val_occ_df
+        self.scaled_test_occ_df = scaled_test_occ_df
+
+        self.train_coords_occ_df = train_coords_occ_df
+        self.val_coords_occ_df = val_coords_occ_df
+        self.test_coords_occ_df = test_coords_occ_df
+
+    def __create_psa_df(self,):
+        self.psa_dataset_builder = PseudoAbsensesDatasetBuilder(
+            root_data_dirpath=self.root_data_dirpath,
+            ps_generator_type=self.ps_generator_type,
+            scaled_occurrence_df=self.scaled_train_occ_df,
+            min_max_scaler=self.min_max_scaler,
+        )
+
+        occ_df_size = (
+            len(self.scaled_train_occ_df)
+            + len(self.scaled_val_occ_df)
+            + len(self.scaled_test_occ_df)
+        )
+
+        number_pseudo_absenses = int(occ_df_size * self.ps_proportion)
+        self.psa_dataset_builder.build(number_pseudo_absenses=number_pseudo_absenses)
+
+        psa_df = self.psa_dataset_builder.get_dataset()
+        coords_psa_df = self.psa_dataset_builder.get_coordinates_df()
+
+        scaled_psa_df = self.min_max_scaler.scale_df(psa_df)
+        (
+            scaled_train_psa_df,
+            scaled_val_psa_df,
+            scaled_test_psa_df,
+        ) = self.__split_dataset(scaled_psa_df)
+
+        (
+            train_coords_psa_df,
+            val_coords_psa_df,
+            test_coords_psa_df,
+        ) = self.__reflect_split_from_other_dataset(
+            coords_psa_df, scaled_train_psa_df, scaled_val_psa_df, scaled_test_psa_df
+        )
+
+        # Estao vindo valores -9999.0
+        self.scaled_train_psa_df = scaled_train_psa_df
+        self.scaled_val_psa_df = scaled_val_psa_df
+        self.scaled_test_psa_df = scaled_test_psa_df
+
+        self.train_coords_psa_df = train_coords_psa_df
+        self.val_coords_psa_df = val_coords_psa_df
+        self.test_coords_psa_df = test_coords_psa_df
+
+    def __create_binary_classification_dataset(self):
+        self.scaled_train_df = pd.concat(
+            [self.scaled_train_occ_df, self.scaled_train_psa_df], ignore_index=True
+        )
+        self.scaled_val_df = pd.concat(
+            [self.scaled_val_occ_df, self.scaled_val_psa_df], ignore_index=True
+        )
+        self.scaled_test_df = pd.concat(
+            [self.scaled_test_occ_df, self.scaled_test_psa_df], ignore_index=True
+        )
+
+        self.train_coords_df = pd.concat(
+            [self.train_coords_occ_df, self.train_coords_psa_df], ignore_index=True
+        )
+        self.val_coords_df = pd.concat(
+            [self.val_coords_occ_df, self.val_coords_psa_df], ignore_index=True
+        )
+        self.test_coords_df = pd.concat(
+            [self.test_coords_occ_df, self.test_coords_psa_df], ignore_index=True
+        )
+
+    def __create_anomaly_detection_dataset(self):
+        self.scaled_train_df = self.scaled_train_occ_df.reset_index(drop=True)
+        self.scaled_val_df = pd.concat(
+            [self.scaled_val_occ_df, self.scaled_val_psa_df], ignore_index=True
+        )
+        self.scaled_test_df = pd.concat(
+            [self.scaled_test_occ_df, self.scaled_test_psa_df], ignore_index=True
+        )
+
+        self.train_coords_df = self.train_coords_occ_df.reset_index(drop=True)
+        self.val_coords_df = pd.concat(
+            [self.val_coords_occ_df, self.val_coords_psa_df], ignore_index=True
+        )
+        self.test_coords_df = pd.concat(
+            [self.test_coords_occ_df, self.test_coords_psa_df], ignore_index=True
+        )
+
+    def create_dataset(self,):
+
+        self.__create_occ_df()
+        self.__create_psa_df()
+        if self.modelling_type == ModellingType.AnomalyDetection:
+            self.__create_anomaly_detection_dataset()
+        elif self.modelling_type == ModellingType.BinaryClassification:
+            self.__create_binary_classification_dataset()
+
+        self.create_vif_dataset()
+        self.save()
+
+    def create_vif_dataset(self):
+        tempdir = PathUtils.get_temp_dir()
+        temp_vif_reference_df_path = tempdir / "temp.csv"
+        self.scaled_train_df.to_csv(temp_vif_reference_df_path, index=False)
+        vif_calculator = VIFCalculator(
+            dataset_path=temp_vif_reference_df_path, output_column="label"
+        )
+        vif_calculator.calculate_vif()
+
+        self.train_vif_df = self.scaled_train_df[
+            vif_calculator.get_optimous_columns_with_label()
+        ]
+        self.val_vif_df = self.scaled_val_df[
+            vif_calculator.get_optimous_columns_with_label()
+        ]
+        self.test_vif_df = self.scaled_test_df[
+            vif_calculator.get_optimous_columns_with_label()
+        ]
+        self.vif_decision_df = vif_calculator.get_vif_df()
+
+    def save(self):
+
+        # coords df
+        self.train_coords_df.to_csv(
+            self.species_dataset_path / "train_coords.csv", index=False
+        )
+        self.val_coords_df.to_csv(
+            self.species_dataset_path / "valid_coords.csv", index=False
+        )
+        self.test_coords_df.to_csv(
+            self.species_dataset_path / "test_coords.csv", index=False
+        )
+
+        # data df
+        self.scaled_train_df.to_csv(
+            self.species_dataset_path / "train.csv", index=False
+        )
+        self.scaled_val_df.to_csv(self.species_dataset_path / "valid.csv", index=False)
+        self.scaled_test_df.to_csv(self.species_dataset_path / "test.csv", index=False)
+
+        # vif df
+        self.train_vif_df.to_csv(
+            self.species_dataset_path / "vif_train.csv", index=False
+        )
+        self.val_vif_df.to_csv(self.species_dataset_path / "vif_valid.csv", index=False)
+        self.test_vif_df.to_csv(self.species_dataset_path / "vif_test.csv", index=False)
+        self.vif_decision_df.to_csv(
+            self.species_dataset_path / "vif_decision_df.csv", index=False
+        )
+
+
+class DatasetCreationJobPrevious:
     """
     [Create a dataset with species and pseudo spescies for SDM Machine Learning]
     """
@@ -91,12 +386,10 @@ class DatasetCreationJob:
             root_data_dirpath=self.root_data_dirpath,
             ps_generator_type=self.ps_generator_type,
             scaled_occurrence_df=scaled_occ_df,
-            min_max_scaler = self.min_max_scaler
+            min_max_scaler=self.min_max_scaler,
         )
         number_pseudo_absenses = int(len(occ_df) * self.ps_proportion)
-        self.psa_dataset_builder.build(
-            number_pseudo_absenses=number_pseudo_absenses
-        )
+        self.psa_dataset_builder.build(number_pseudo_absenses=number_pseudo_absenses)
 
         psa_df = self.psa_dataset_builder.get_dataset()
         coords_psa_df = self.psa_dataset_builder.get_coordinates_df()
@@ -119,13 +412,12 @@ class DatasetCreationJob:
             )
 
         elif modellting_type == ModellingType.AnomalyDetection:
-            import pdb
-
-            pdb.set_trace()
             df = df.sample(frac=1)
             df_occ = df[df["label"] == 1]
             df_psa = df[df["label"] == 0]
-            num_inference_data = int(len(df_occ) * self.inference_proportion_from_all_data)
+            num_inference_data = int(
+                len(df_occ) * self.inference_proportion_from_all_data
+            )
             df_train = df_occ[num_inference_data:].reset_index(drop=True)
             df_inference_occ = df_occ[:num_inference_data]
             df_inference_psa = df_psa[: len(df_inference_occ)]

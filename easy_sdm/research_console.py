@@ -1,6 +1,8 @@
 from gc import callbacks
 from pathlib import Path
 from typing import Optional
+import numpy as np
+from easy_sdm.utils.path_utils import PathUtils
 
 import typer
 
@@ -9,9 +11,10 @@ from easy_sdm.configs import configs
 from easy_sdm.enums import PseudoSpeciesGeneratorType
 from easy_sdm.featuarizer import DatasetCreationJob
 from easy_sdm.species_collection import SpeciesCollectionJob
-from easy_sdm.utils.data_loader import ShapefileLoader, PickleLoader
+from easy_sdm.utils.data_loader import RasterLoader, ShapefileLoader, PickleLoader
 
 app = typer.Typer()
+
 
 milpa_species_dict = {
     5290052: "Zea mays",
@@ -27,6 +30,8 @@ milpa_species_dict = {
     8403992: "Capsicum frutescens",
     2932942: "Capsicum chinense",
 }
+
+data_dirpath = Path.cwd() / "data"
 
 
 def version_callback(value: bool):
@@ -47,6 +52,43 @@ def version(
     Any issue please contact authors
     """
     typer.echo("easy_sdm")
+
+
+@app.command("check-processed-rasters")
+def check_processed_rasters():
+    """
+    Em todos os mrus rasters existem resquicios de -9999.0 dentro da mascara. O que comprometera
+    o algoritimo futuramente. Preciso ter certeza de que todos eles foram removidos antes da proxima
+    etapa.
+    """
+    raster_paths = PathUtils.get_rasters_filepaths_in_dir(
+        data_dirpath / "raster_processing/environment_variables_rasters"
+    )
+    region_mask_array = (
+        RasterLoader(data_dirpath / "raster_processing/region_mask.tif")
+        .load_dataset()
+        .read(1)
+    )
+    for path in raster_paths:
+        print(path)
+        if "bio1_annual_mean_temperature" in str(path):
+            raster = RasterLoader(path).load_dataset()
+            raster_array = raster.read(1)
+            raster_array = np.where(
+                region_mask_array == configs["maps"]["no_data_val"],
+                -1000,
+                raster_array,
+            )
+            if raster_array.min() == configs["maps"]["no_data_val"]:
+                vals, counts = np.unique(raster_array, return_counts=True)
+                print([(v, c) for (v, c) in sorted(zip(counts, vals))][::-1][:5])
+                import pdb
+
+                pdb.set_trace()
+            else:
+                import pdb
+
+                pdb.set_trace()
 
 
 def get_species_dataframe(species_name):

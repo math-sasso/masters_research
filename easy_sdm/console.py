@@ -71,6 +71,14 @@ def modellling_type_selector_from_estimator(estimator_type: str):
     return modelling_type
 
 
+def modellling_type_selector(modelling_type: str):
+    modelling_type = {
+        "binary_classification": ModellingType.BinaryClassification,
+        "anomaly_detection": ModellingType.AnomalyDetection,
+    }.get(modelling_type, None)
+    return modelling_type
+
+
 def ps_generator_type_selector(ps_generator_type):
     ps_generator_type = {
         "RSEP": PseudoSpeciesGeneratorType.RSEP,
@@ -150,17 +158,14 @@ def create_environment():
 
 
 def create_dataset_by_specie(
-    species_id: int, ps_generator_type: str = None, ps_proportion: float = None,
+    species_id: int,
+    ps_generator_type: str,
+    ps_proportion: float,
+    modelling_type: ModellingType,
 ):
     species = Species(taxon_key=species_id, name=milpa_species_dict[species_id])
 
     ps_generator_type = ps_generator_type_selector(ps_generator_type)
-
-    sdm_dataset_creator = DatasetCreationJob(
-        root_data_dirpath=data_dirpath,
-        ps_proportion=ps_proportion,
-        ps_generator_type=ps_generator_type,
-    )
 
     species_gdf = ShapefileLoader(
         shapefile_path=data_dirpath
@@ -168,36 +173,56 @@ def create_dataset_by_specie(
         / species.get_name_for_paths()
     ).load_dataset()
 
-    df_sdm_bc, coords_df = sdm_dataset_creator.create_general_dataset(
+    sdm_dataset_creator = DatasetCreationJob(
+        root_data_dirpath=data_dirpath,
+        species=species,
         species_gdf=species_gdf,
+        ps_proportion=ps_proportion,
+        ps_generator_type=ps_generator_type,
+        modelling_type=modelling_type,
     )
 
-    sdm_dataset_creator.save_dataset(
-        species=species,
-        sdm_df=df_sdm_bc,
-        coords_df=coords_df,
-        modellting_type=ModellingType.AnomalyDetection,
-    )
+    sdm_dataset_creator.create_dataset()
 
-    sdm_dataset_creator.save_dataset(
-        species=species,
-        sdm_df=df_sdm_bc,
-        coords_df=coords_df,
-        modellting_type=ModellingType.BinaryClassification,
-    )
+    # sdm_dataset_creator = DatasetCreationJob(
+    #     root_data_dirpath=data_dirpath,
+    #     ps_proportion=ps_proportion,
+    #     ps_generator_type=ps_generator_type,
+    # )
+
+    # df_sdm_bc, coords_df = sdm_dataset_creator.create_general_dataset(
+    #     species_gdf=species_gdf,
+    # )
+
+    # sdm_dataset_creator.save_dataset(
+    #     species=species,
+    #     sdm_df=df_sdm_bc,
+    #     coords_df=coords_df,
+    #     modellting_type=ModellingType.AnomalyDetection,
+    # )
+
+    # sdm_dataset_creator.save_dataset(
+    #     species=species,
+    #     sdm_df=df_sdm_bc,
+    #     coords_df=coords_df,
+    #     modellting_type=ModellingType.BinaryClassification,
+    # )
 
 
 @app.command("create-dataset")
 def create_dataset(
     species_id: int = typer.Option(..., "--species-id", "-s"),
+    modelling_type: str = typer.Option(..., "--modelling_type", "-m"),
     ps_generator_type: str = typer.Option(..., "--ps-generator-type", "-t"),
     ps_proportion: float = typer.Option(..., "--ps-proportion", "-p"),
 ):
+    modelling_type = modellling_type_selector(modelling_type)
 
     create_dataset_by_specie(
         species_id=species_id,
         ps_generator_type=ps_generator_type,
         ps_proportion=ps_proportion,
+        modelling_type=modelling_type,
     )
 
 
@@ -206,12 +231,18 @@ def create_dataset(
     ps_generator_type: str = typer.Option(..., "--ps-generator-type", "-t"),
     ps_proportion: float = typer.Option(..., "--ps-proportion", "-p"),
 ):
+
     for species_id, _ in milpa_species_dict:
-        create_dataset_by_specie(
-            species_id=species_id,
-            ps_generator_type=ps_generator_type,
-            ps_proportion=ps_proportion,
-        )
+        for modelling_type in [
+            ModellingType.BinaryClassification,
+            ModellingType.AnomalyDetection,
+        ]:
+            create_dataset_by_specie(
+                species_id=species_id,
+                ps_generator_type=ps_generator_type,
+                ps_proportion=ps_proportion,
+                modelling_type=modelling_type,
+            )
 
 
 @app.command("train")

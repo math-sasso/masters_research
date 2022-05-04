@@ -5,6 +5,7 @@ import matplotlib
 from matplotlib import cm
 from matplotlib.colors import ListedColormap, LinearSegmentedColormap
 
+
 class SpeciesInRasterPlotter:
     def __init__(self) -> None:
         pass
@@ -30,7 +31,7 @@ class RasterPlotter:
     def __init__(self) -> None:
         pass
 
-    def __get_map_plot_cmap(self,raster_array):
+    def __get_map_plot_cmap(self, raster_array):
 
         raster_array[raster_array == -9999.0] = -0.001
         norm = matplotlib.colors.Normalize(-0.001, 100)
@@ -48,7 +49,7 @@ class RasterPlotter:
 
         return custom_cmap
 
-    def __get_rsep_map(self,raster_array):
+    def __get_rsep_map(self, raster_array):
         raster_array[raster_array == -9999.0] = 0
         norm = matplotlib.colors.Normalize(-1, 1)
         colors = [
@@ -60,14 +61,20 @@ class RasterPlotter:
 
         return custom_cmap
 
-    def plot(self, raster_array, save_path: Path, cmap_style:str):
+    def plot(self, raster_array, save_path: Path, cmap_style: str):
         # inferno = cm.get_cmap('inferno', 1)
         # terrain = cm.get_cmap('terrain', 10)# combine it all
         # newcolors = np.vstack((inferno(np.linspace(0, 1, 1)),
         #                terrain(np.linspace(0, 1, 10))))
         # mycm = ListedColormap(newcolors, name='mycm')
-        import pdb;pdb.set_trace()
-        custom_cmap = self.__get_map_plot_cmap(raster_array) if cmap_style == "normal_map" else self.__get_rsep_map(raster_array)
+        import pdb
+
+        pdb.set_trace()
+        custom_cmap = (
+            self.__get_map_plot_cmap(raster_array)
+            if cmap_style == "normal_map"
+            else self.__get_rsep_map(raster_array)
+        )
         plt.plot(raster_array, cmap=custom_cmap)
         plt.savefig(save_path)
         plt.clf()

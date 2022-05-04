@@ -49,9 +49,6 @@ class RSEPPseudoSpeciesGenerator(BasePseudoSpeciesGenerator):
         self.ocsvm_configs = configs["OCSVM"]
         self.ocsvm = OCSVM(**self.ocsvm_configs)
 
-
-
-
     def __check_arguments(self):
         assert type(self.region_mask_raster) is rasterio.io.DatasetReader
         assert type(self.stacked_raster_coverages) is np.ndarray
@@ -90,9 +87,13 @@ class RSEPPseudoSpeciesGenerator(BasePseudoSpeciesGenerator):
             :, self.inside_mask_idx[0], self.inside_mask_idx[1]
         ].T
 
-        inside_country_values_scaled = self.min_max_scaler.scale_coverages(inside_country_values)
+        inside_country_values_scaled = self.min_max_scaler.scale_coverages(
+            inside_country_values
+        )
         predicted_anomaly_detection = self.ocsvm.predict(inside_country_values_scaled)
-        Z[self.inside_mask_idx[0], self.inside_mask_idx[1]] = predicted_anomaly_detection
+        Z[
+            self.inside_mask_idx[0], self.inside_mask_idx[1]
+        ] = predicted_anomaly_detection
         return Z
 
     def generate(self, number_pseudo_absenses: int):

@@ -15,7 +15,7 @@ class PseudoAbsensesDatasetBuilder:
         root_data_dirpath: Path,
         ps_generator_type: PseudoSpeciesGeneratorType,
         scaled_occurrence_df: pd.DataFrame,
-        min_max_scaler: MinMaxScalerWrapper
+        min_max_scaler: MinMaxScalerWrapper,
     ):
 
         self.root_data_dirpath = root_data_dirpath
@@ -36,7 +36,6 @@ class PseudoAbsensesDatasetBuilder:
             self.root_data_dirpath / "environment/environment_stack.npy"
         )
 
-
     def __get_var_names_list(self):
         return [Path(path).name.split(".")[0] for path in self.raster_path_list]
 
@@ -50,7 +49,7 @@ class PseudoAbsensesDatasetBuilder:
             ps_generator = RSEPPseudoSpeciesGenerator(
                 region_mask_raster=region_mask_raster,
                 stacked_raster_coverages=stacked_raster_coverages,
-                min_max_scaler = self.min_max_scaler
+                min_max_scaler=self.min_max_scaler,
             )
             ps_generator.fit(self.scaled_occurrence_df)
 
@@ -61,7 +60,6 @@ class PseudoAbsensesDatasetBuilder:
             raise ValueError()
 
         self.ps_generator = ps_generator
-
 
     def build(self, number_pseudo_absenses: int):
 
