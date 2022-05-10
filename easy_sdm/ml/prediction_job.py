@@ -16,6 +16,31 @@ from easy_sdm.utils.data_loader import (
 from .persistance.map_results_persistance import MapResultsPersistance
 
 
+class RelevantRastersSelector():
+    def __init__(self, data_dirpath, run_id) -> None:
+        self.data_dirpath = data_dirpath
+        self.run_id = run_id
+        self.__setup_mlflow()
+        self.__setup()
+
+    def __setup_mlflow(self):
+        ml_dirpath = str(Path.cwd() / "data/ml")
+        mlflow.set_tracking_uri(f"file:{ml_dirpath}")
+
+    def __setup(self):
+        relevant_raster_list = PickleLoader(self.data_dirpath / "environment/relevant_raster_list").load_dataset()
+        experiment_dataset_path = Path(mlflow.get_run(self.run_id).data.tags['experiment_dataset_path'])
+        vif_decision_df, _ = DatasetLoader(experiment_dataset_path/"vif_decision_df.csv").load_dataset()
+        self.vif_decision_columns = vif_decision_df["feature"].tolist()
+        relevant_raster_name_list = [str(path).split("/")[-1].replace(".tif","") for path in relevant_raster_list]
+        self.vif_relevant_raster_list_pos = [relevant_raster_name_list.index(elem) for elem in self.vif_decision_columns]
+
+    def get_vif_decision_columns(self):
+        return self.vif_decision_columns
+
+    def get_vif_relevant_raster_list_pos(self):
+        return self.vif_relevant_raster_list_pos
+
 class Prediction_Job:
 
     """
@@ -33,27 +58,31 @@ class Prediction_Job:
         │       └── plot_sample.html
     """
 
-    def __init__(self, data_dirpath: Path) -> None:
+    def __init__(self, data_dirpath: Path, run_id: str, species: Species) -> None:
         self.configs = configs
         self.data_dirpath = data_dirpath
+        self.species = species
+        self.run_id = run_id
         self.__setup()
         self.__setup_mlflow()
 
     def __setup(self):
 
+
         land_reference = RasterLoader(
             self.data_dirpath / "raster_processing/region_mask.tif"
         ).load_dataset()
 
-        raster_path_list = PickleLoader(
-            self.data_dirpath / "environment/relevant_raster_list"
-        ).load_dataset()
         statistics_dataset, _ = DatasetLoader(
             self.data_dirpath / "featuarizer/raster_statistics.csv"
         ).load_dataset()
 
+        if mlflow.get_run(self.run_id).data.tags['VIF'] =="vif_columns":
+            self.relevant_raster_selector = RelevantRastersSelector(data_dirpath=self.data_dirpath,run_id=self.run_id)
+            statistics_dataset = statistics_dataset[statistics_dataset['raster_name'].isin(self.relevant_raster_selector.get_vif_decision_columns())]
+
         self.scaler = MinMaxScalerWrapper(
-            raster_path_list=raster_path_list, statistics_dataset=statistics_dataset
+            statistics_dataset=statistics_dataset
         )
 
         self.idx = np.where(
@@ -65,12 +94,12 @@ class Prediction_Job:
         ml_dirpath = str(Path.cwd() / "data/ml")
         mlflow.set_tracking_uri(f"file:{ml_dirpath}")
 
-    def set_model(self, run_id: str, species: Species):
+    def set_model(self):
 
         # mlflow.get_run()
-        logged_model = f"runs:/{run_id}/{species.get_name_for_plots()}"
+        logged_model = f"runs:/{self.run_id}/{self.species.get_name_for_plots()}"
         # self.loaded_model = mlflow.pyfunc.load_model(logged_model)
-        history = mlflow.get_run(run_id).data.tags["mlflow.log-model.history"].lower()
+        history = mlflow.get_run(self.run_id).data.tags["mlflow.log-model.history"].lower()
 
         if "xgboost" in history:
             self.loaded_model = mlflow.xgboost.load_model(logged_model)
@@ -79,16 +108,23 @@ class Prediction_Job:
         else:
             self.loaded_model = mlflow.sklearn.load_model(logged_model)
 
-        self.species = species
-        self.run_id = run_id
 
-    def map_prediction(self):
+    def __get_stacked_raster_coverages(self):
 
-        assert self.loaded_model != None, "Set model first"
         stacked_raster_coverages = NumpyArrayLoader(
             self.data_dirpath / "environment/environment_stack.npy"
         ).load_dataset()
 
+        if mlflow.get_run(self.run_id).data.tags['VIF'] =="vif_columns":
+            stacked_raster_coverages = stacked_raster_coverages[self.relevant_raster_selector.get_vif_relevant_raster_list_pos()]
+
+        return stacked_raster_coverages
+
+    def map_prediction(self):
+
+        assert self.loaded_model != None, "Set model first"
+
+        stacked_raster_coverages = self.__get_stacked_raster_coverages()
         coverages_of_interest = stacked_raster_coverages[:, self.idx[0], self.idx[1]].T
         scaled_coverages = self.scaler.scale_coverages(coverages_of_interest)
         global_pred = self.loaded_model.predict_adaptability(scaled_coverages)

@@ -1,11 +1,11 @@
-from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.ensemble import RandomForestClassifier
 
 
-class GradientBoosting(GradientBoostingClassifier):
+class RandomForest(RandomForestClassifier):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
         self.framework = "sklearn"
-        self.estimator_name = "GradientBoosting"
+        self.estimator_name = "RandomForest"
 
     def fit(self, X_train, y_train, X_valid=None, y_valid=None, **kwargs):
         super().fit(X_train, y_train, **kwargs)

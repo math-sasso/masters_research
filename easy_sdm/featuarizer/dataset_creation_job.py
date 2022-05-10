@@ -65,7 +65,7 @@ class DatasetCreationJob:
 
         self.species_dataset_path = (
             self.root_data_dirpath
-            / f"featuarizer/datasets/{self.species.get_name_for_paths()}"
+            / f"featuarizer/datasets/{self.species.get_name_for_paths()}/{self.modelling_type.value}"
         )
         self.species_dataset_path.mkdir(parents=True, exist_ok=True)
 
@@ -127,7 +127,7 @@ class DatasetCreationJob:
         # )
         # statistics_dataset_path = self.species_dataset_path / 'statistics.csv'
 
-        statistics_dataset_path = self.species_dataset_path / "raster_statistics.csv"
+        statistics_dataset_path = self.root_data_dirpath / f"featuarizer/raster_statistics.csv"
 
         raster_statistics_calculator = RasterStatisticsCalculator(
             raster_path_list=self.raster_path_list,

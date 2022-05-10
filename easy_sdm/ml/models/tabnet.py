@@ -8,6 +8,7 @@ class TabNet(TabNetClassifier):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
         self.framework = "pytorch"
+        self.estimator_name = "TabNet"
 
     def fit(self, X_train, y_train, X_valid, y_valid, **kwargs):
 

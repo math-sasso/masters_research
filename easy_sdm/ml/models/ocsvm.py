@@ -7,6 +7,7 @@ class OCSVM(OneClassSVM):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
         self.framework = "sklearn"
+        self.estimator_name = "OCSVM"
 
     def fit(self, X_train, y_train=None, X_valid=None, y_valid=None, **kwargs):
         super().fit(X_train, **kwargs)

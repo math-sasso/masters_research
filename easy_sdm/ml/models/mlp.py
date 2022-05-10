@@ -5,6 +5,7 @@ class MLP(MLPClassifier):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
         self.framework = "sklearn"
+        self.estimator_name = "MLP"
 
     def fit(self, X_train, y_train, X_valid=None, y_valid=None, **kwargs):
         super().fit(X_train, y_train, **kwargs)

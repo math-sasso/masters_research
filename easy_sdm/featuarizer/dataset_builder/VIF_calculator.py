@@ -11,6 +11,16 @@ class VIFCalculator:
         self.dataset_path = dataset_path
         self.output_column = output_column
 
+    def __calculate_vif_dataframe(self, X):
+        vif_data = pd.DataFrame()
+        vif_data["feature"] = X.columns
+
+        # calculating VIF for each feature
+        vif_data["VIF"] = [
+            variance_inflation_factor(X.values, i) for i in range(len(X.columns))
+        ]
+        return vif_data
+
     def calculate_vif(self,):
         dataloader = DatasetLoader(
             dataset_path=self.dataset_path, output_column=self.output_column
@@ -19,18 +29,12 @@ class VIFCalculator:
         max = inf
         while max > 10:
             # VIF dataframe
-            vif_data = pd.DataFrame()
-            vif_data["feature"] = X.columns
-
-            # calculating VIF for each feature
-            vif_data["VIF"] = [
-                variance_inflation_factor(X.values, i) for i in range(len(X.columns))
-            ]
-
+            vif_data = self.__calculate_vif_dataframe(X)
             idmax = vif_data["VIF"].idxmax()
             max = vif_data["VIF"].max()
             feature_to_remove = vif_data.iloc[idmax]["feature"]
             X = X.drop([feature_to_remove], axis=1)
+        vif_data = self.__calculate_vif_dataframe(X)
 
         self.X = X
         self.vif_data = vif_data

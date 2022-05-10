@@ -4,8 +4,8 @@ from enum import Enum
 class EstimatorType(Enum):
     Tabnet = "Tabnet"
     MLP = "MLP"
-    EnsembleForest = "EnsembleForest"
     GradientBoosting = "GradientBoosting"
+    RandomForest = "RandomForest"
     Xgboost = "Xgboost"
     XgboostRF = "XgboostRF"
     OCSVM = "OCSVM"

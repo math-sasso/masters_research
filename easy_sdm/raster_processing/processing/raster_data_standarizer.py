@@ -25,6 +25,7 @@ class RasterMissingValueFiller:
         mask = np.where(~np.isnan(data))
         interp = NearestNDInterpolator(np.transpose(mask), data[mask])
         filled_data = interp(*np.indices(data.shape))
+
         return filled_data
 
 
@@ -41,38 +42,48 @@ class RasterDataStandarizer:
         )
         self.inputer = RasterMissingValueFiller()
 
+    def __one_step_standarization(self, data: np.ndarray):
+        data = np.where(self.region_mask_array == configs["maps"]["no_data_val"],
+        configs["maps"]["no_data_val"],
+        self.inputer.fill_missing_values(data, [configs["maps"]["no_data_val"]])
+        )
+        return data
+
     def __standarize_country_borders(self, data: np.ndarray):
 
-        data = np.where(
-            self.region_mask_array == configs["maps"]["no_data_val"],
-            configs["maps"]["no_data_val"],
-            data,
-        )
+        data = np.where(self.region_mask_array == configs["maps"]["no_data_val"],
+                        configs["maps"]["no_data_val"],
+                        data)
 
         return data
 
     def __standarize_no_data_val(self, profile: Dict, data: np.ndarray):
 
-        data = np.where(
-            data == profile["nodata"], configs["maps"]["no_data_val"], data,
-        )
+        data = np.where(data == profile["nodata"], configs["maps"]["no_data_val"], data)
 
         return data
 
+    def __assert_standarizarion_is_correct(self,raster_array):
+        raster_array = np.where(self.region_mask_array == configs["maps"]["no_data_val"],-1000,raster_array,)
+
+        assert raster_array.min() == -1000
+
+    def __set_soilgrids_no_data_to_profile(self,profile):
+        profile["nodata"] = 0
+        return profile
+
+
     def standarize(self, raster, raster_source: RasterSource, output_path: Path):
         profile = raster.profile.copy()
+        if raster_source == RasterSource.Soilgrids:
+            profile = self.__set_soilgrids_no_data_to_profile(profile)
         data = raster.read(1)
         height, width = data.shape
         data = np.float32(data)
 
-        if raster_source in [RasterSource.Envirem, RasterSource.Bioclim]:
-            # profile = self.__set_no_data_key_for_soilgrids_rasters(profile)
-            data = self.__standarize_country_borders(data)
-            data = self.__standarize_no_data_val(profile, data)
-
-        elif raster_source == RasterSource.Soilgrids:
-            data = self.__standarize_country_borders(data)
-            data = self.inputer.fill_missing_values(data=data, no_value_list=[0])
+        data = self.__standarize_no_data_val(profile, data)
+        data = self.__one_step_standarization(data=data)
+        self.__assert_standarizarion_is_correct(data)
 
         profile.update(
             {

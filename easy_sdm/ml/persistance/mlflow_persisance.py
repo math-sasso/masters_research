@@ -2,10 +2,12 @@ import mlflow
 from typing import Dict
 from pathlib import Path
 
+from easy_sdm.ml.models.base import BaseEstimator
 
 class MLFlowPersistence:
-    def __init__(self, mlflow_experiment_name: str,) -> None:
+    def __init__(self, mlflow_experiment_name: str, experiment_featurizer_path) -> None:
         self.mlflow_experiment_name = mlflow_experiment_name
+        self.experiment_featurizer_path = experiment_featurizer_path
         self.__setup_mlflow()
         self.__set_experiment()
 
@@ -26,7 +28,7 @@ class MLFlowPersistence:
         mlflow.log_metrics(metrics)
         # mlflow.log_artifact('roi_features.csv', artifact_path='features')
 
-    def persist(self, model, metrics: Dict, parameters: Dict, vif: str, end=True):
+    def persist(self, model:BaseEstimator, metrics: Dict, parameters: Dict, vif: str, end=True):
 
         if mlflow.active_run():
             mlflow.end_run()
@@ -34,6 +36,8 @@ class MLFlowPersistence:
         run = mlflow.start_run()
         run_id = run.info.run_id
 
+        mlflow.set_tag("Estimator", model.estimator_name)
+        mlflow.set_tag("experiment_dataset_path", self.experiment_featurizer_path)
         mlflow.set_tag("VIF", vif)
         mlflow.set_tag("run ID", run_id)
 

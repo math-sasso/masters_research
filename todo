@@ -1,4 +1,1 @@
-TODO: Reprocess raw rasters and be shure that there is no -9999.0 insidearray after mask if filtered.
-    -> IDEA: Plot wrong points in the map with a specific color to check what is hapenning
-
 TODO: Refactor Dataset Creation Job to get statistics only from train data
