@@ -64,13 +64,17 @@ class TrainJob:
     def __setup(self):
 
         # Path with data used in the experiment
-        experiment_featurizer_path = "/".join(str(self.train_data_loader.dataset_path).split("/")[:-1])
+        experiment_featurizer_path = "/".join(
+            str(self.train_data_loader.dataset_path).split("/")[:-1]
+        )
 
         # SETUP MLFLOW
         self.mlflow_experiment_name = self.species.get_name_for_plots()
         self.columns_considered = "vif_columns" if self.vif_columns else "all_columns"
 
-        self.mlflow_persister = MLFlowPersistence(self.mlflow_experiment_name, experiment_featurizer_path)
+        self.mlflow_persister = MLFlowPersistence(
+            self.mlflow_experiment_name, experiment_featurizer_path
+        )
 
         # LOAD DATASETS
         (self.X_train_df, self.y_train_df,) = self.train_data_loader.load_dataset()
@@ -143,10 +147,7 @@ class EstimatorSelector:
                 criterion="squared_error",
             )
         elif self.estimator_type == EstimatorType.RandomForest:
-            estimator = RandomForest(
-                max_depth=10,
-                random_state=self.random_state
-            )
+            estimator = RandomForest(max_depth=10, random_state=self.random_state)
         elif self.estimator_type == EstimatorType.Tabnet:
             estimator = TabNet(device_name="cpu")
         elif self.estimator_type == EstimatorType.Xgboost:
@@ -169,5 +170,5 @@ class EstimatorSelector:
 
     def get_estimator_parameters(self):
         params = self.estimator.__dict__
-        params =  {k:v for k,v in params.items() if len(str(v)) <=250}
+        params = {k: v for k, v in params.items() if len(str(v)) <= 250}
         return params

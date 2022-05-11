@@ -4,6 +4,7 @@ from pathlib import Path
 
 from easy_sdm.ml.models.base import BaseEstimator
 
+
 class MLFlowPersistence:
     def __init__(self, mlflow_experiment_name: str, experiment_featurizer_path) -> None:
         self.mlflow_experiment_name = mlflow_experiment_name
@@ -28,7 +29,9 @@ class MLFlowPersistence:
         mlflow.log_metrics(metrics)
         # mlflow.log_artifact('roi_features.csv', artifact_path='features')
 
-    def persist(self, model:BaseEstimator, metrics: Dict, parameters: Dict, vif: str, end=True):
+    def persist(
+        self, model: BaseEstimator, metrics: Dict, parameters: Dict, vif: str, end=True
+    ):
 
         if mlflow.active_run():
             mlflow.end_run()

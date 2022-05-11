@@ -124,6 +124,7 @@ def process_rasters():
     raster_processing_job = RasterProcessingJob(data_dirpath=data_dirpath)
     raster_processing_job.process_rasters_from_all_sources()
 
+
 @app.command("build-species-data")
 def build_species_data(species_id: int = typer.Option(..., "--species-id", "-s"),):
     output_dirpath = data_dirpath / "species_collection"
@@ -230,17 +231,39 @@ def create_dataset(
     ps_proportion: float = typer.Option(..., "--ps-proportion", "-p"),
 ):
 
-    for species_id, _ in milpa_species_dict:
+    for species_id, species_name in milpa_species_dict.items():
+        print(f"Creating dataset for: {species_name}")
         for modelling_type in [
             ModellingType.BinaryClassification,
-            ModellingType.AnomalyDetection,
+            # ModellingType.AnomalyDetection,
         ]:
-            create_dataset_by_specie(
-                species_id=species_id,
-                ps_generator_type=ps_generator_type,
-                ps_proportion=ps_proportion,
-                modelling_type=modelling_type,
-            )
+            if species_id != 7587087:
+                create_dataset_by_specie(
+                    species_id=species_id,
+                    ps_generator_type=ps_generator_type,
+                    ps_proportion=ps_proportion,
+                    modelling_type=modelling_type,
+                )
+
+
+@app.command("train-all-estimators-all-species")
+def train_all_estimators_all_species():
+    for specie_id, species_name in milpa_species_dict.items():
+        train_all_estimators(species_id=specie_id)
+
+
+@app.command("train-all-estimators")
+def train_all_estimators(species_id: int = typer.Option(..., "--species-id", "-s")):
+
+    working_estimators = [
+        "mlp",
+        "gradient_boosting",
+        "random_forest",
+        "xgboost",
+        "xgboostrf",
+    ]
+    for estimator_type in working_estimators:
+        train(species_id=species_id, estimator_type=estimator_type)
 
 
 @app.command("train")
@@ -300,24 +323,31 @@ def infer_map(
 ):
     # TODO: selecionar o numero de features do vif. Vai precisar saber qual o numero da coluna que vai precisar filtrar
     species = Species(taxon_key=species_id, name=milpa_species_dict[species_id])
-    prediction_job = Prediction_Job(data_dirpath=data_dirpath,run_id=run_id, species=species)
+    prediction_job = Prediction_Job(
+        data_dirpath=data_dirpath, run_id=run_id, species=species
+    )
     prediction_job.set_model()
     Z = prediction_job.map_prediction()
     prediction_job.log_map(Z=Z)
 
 
 @app.command("infer-all-maps")
-def infer_all_maps(
-    species_id: int = typer.Option(..., "--species-id", "-s"),
-):
+def infer_all_maps(species_id: int = typer.Option(..., "--species-id", "-s"),):
     import mlflow
     from mlflow.tracking.client import MlflowClient
     from mlflow.entities import ViewType
+
     ml_dirpath = str(Path.cwd() / "data/ml")
     mlflow.set_tracking_uri(f"file:{ml_dirpath}")
     species = Species(taxon_key=species_id, name=milpa_species_dict[species_id])
-    experiment_id = [exp.experiment_id for exp in MlflowClient().list_experiments() if exp.name == species.get_name_for_plots()]
-    runs = MlflowClient().search_runs(experiment_ids=experiment_id, run_view_type=ViewType.ALL)
+    experiment_id = [
+        exp.experiment_id
+        for exp in MlflowClient().list_experiments()
+        if exp.name == species.get_name_for_plots()
+    ]
+    runs = MlflowClient().search_runs(
+        experiment_ids=experiment_id, run_view_type=ViewType.ALL
+    )
     for i in range(len(runs)):
         run_id = runs[i].data.tags["run ID"]
         infer_map(species_id=species.taxon_key, run_id=run_id)

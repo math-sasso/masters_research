@@ -127,7 +127,9 @@ class DatasetCreationJob:
         # )
         # statistics_dataset_path = self.species_dataset_path / 'statistics.csv'
 
-        statistics_dataset_path = self.root_data_dirpath / f"featuarizer/raster_statistics.csv"
+        statistics_dataset_path = (
+            self.root_data_dirpath / f"featuarizer/raster_statistics.csv"
+        )
 
         raster_statistics_calculator = RasterStatisticsCalculator(
             raster_path_list=self.raster_path_list,

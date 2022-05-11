@@ -43,17 +43,20 @@ class RasterDataStandarizer:
         self.inputer = RasterMissingValueFiller()
 
     def __one_step_standarization(self, data: np.ndarray):
-        data = np.where(self.region_mask_array == configs["maps"]["no_data_val"],
-        configs["maps"]["no_data_val"],
-        self.inputer.fill_missing_values(data, [configs["maps"]["no_data_val"]])
+        data = np.where(
+            self.region_mask_array == configs["maps"]["no_data_val"],
+            configs["maps"]["no_data_val"],
+            self.inputer.fill_missing_values(data, [configs["maps"]["no_data_val"]]),
         )
         return data
 
     def __standarize_country_borders(self, data: np.ndarray):
 
-        data = np.where(self.region_mask_array == configs["maps"]["no_data_val"],
-                        configs["maps"]["no_data_val"],
-                        data)
+        data = np.where(
+            self.region_mask_array == configs["maps"]["no_data_val"],
+            configs["maps"]["no_data_val"],
+            data,
+        )
 
         return data
 
@@ -63,15 +66,18 @@ class RasterDataStandarizer:
 
         return data
 
-    def __assert_standarizarion_is_correct(self,raster_array):
-        raster_array = np.where(self.region_mask_array == configs["maps"]["no_data_val"],-1000,raster_array,)
+    def __assert_standarizarion_is_correct(self, raster_array):
+        raster_array = np.where(
+            self.region_mask_array == configs["maps"]["no_data_val"],
+            -1000,
+            raster_array,
+        )
 
         assert raster_array.min() == -1000
 
-    def __set_soilgrids_no_data_to_profile(self,profile):
+    def __set_soilgrids_no_data_to_profile(self, profile):
         profile["nodata"] = 0
         return profile
-
 
     def standarize(self, raster, raster_source: RasterSource, output_path: Path):
         profile = raster.profile.copy()

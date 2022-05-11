@@ -58,9 +58,10 @@ class MapResultsPersistance(object):
 
         # Setting titles and labels
         plt.title(
-            f"Distribuição predita para a \nespécie {self.species.get_name_for_plots()}\n algoritimo",
+            f"Distribuição predita para a \nespécie {self.species.get_name_for_plots()}\n algoritmo",
             fontsize=20,
         )
+
         plt.ylabel("Latitude[graus]", fontsize=18)
         plt.xlabel("Longitude[graus]", fontsize=18)
 

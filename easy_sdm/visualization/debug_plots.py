@@ -67,7 +67,9 @@ class RasterPlotter:
         # newcolors = np.vstack((inferno(np.linspace(0, 1, 1)),
         #                terrain(np.linspace(0, 1, 10))))
         # mycm = ListedColormap(newcolors, name='mycm')
-        import pdb ;pdb.set_trace()
+        import pdb
+
+        pdb.set_trace()
         custom_cmap = (
             self.__get_map_plot_cmap(raster_array)
             if cmap_style == "normal_map"
