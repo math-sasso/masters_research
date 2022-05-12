@@ -95,3 +95,9 @@ test-builder-image:
 
 builder-usage:
 	s2i usage ${DOCKER_IMAGE_NAME}
+
+# git
+commit:
+	git add .
+	PRE_COMMIT_ALLOW_NO_CONFIG=1 git commit -m "$t" -m "$b"
+	git push
