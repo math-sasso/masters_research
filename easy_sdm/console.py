@@ -149,18 +149,14 @@ def create_environment():
         processed_rasters_dir
     )
 
-    output_dirpath = data_dirpath / "environment"
     env_creation_job = EnvironmentCreationJob(
-        output_dirpath=output_dirpath, all_rasters_path_list=all_rasters_path_list
+        data_dirpath=data_dirpath, all_rasters_path_list=all_rasters_path_list
     )
     env_creation_job.build_environment()
 
 
 def create_dataset_by_specie(
-    species_id: int,
-    ps_generator_type: str,
-    ps_proportion: float,
-    modelling_type: ModellingType,
+    species_id: int, ps_generator_type: str, modelling_type: ModellingType,
 ):
     species = Species(taxon_key=species_id, name=milpa_species_dict[species_id])
 
@@ -176,36 +172,11 @@ def create_dataset_by_specie(
         root_data_dirpath=data_dirpath,
         species=species,
         species_gdf=species_gdf,
-        ps_proportion=ps_proportion,
         ps_generator_type=ps_generator_type,
         modelling_type=modelling_type,
     )
 
     sdm_dataset_creator.create_dataset()
-
-    # sdm_dataset_creator = DatasetCreationJob(
-    #     root_data_dirpath=data_dirpath,
-    #     ps_proportion=ps_proportion,
-    #     ps_generator_type=ps_generator_type,
-    # )
-
-    # df_sdm_bc, coords_df = sdm_dataset_creator.create_general_dataset(
-    #     species_gdf=species_gdf,
-    # )
-
-    # sdm_dataset_creator.save_dataset(
-    #     species=species,
-    #     sdm_df=df_sdm_bc,
-    #     coords_df=coords_df,
-    #     modellting_type=ModellingType.AnomalyDetection,
-    # )
-
-    # sdm_dataset_creator.save_dataset(
-    #     species=species,
-    #     sdm_df=df_sdm_bc,
-    #     coords_df=coords_df,
-    #     modellting_type=ModellingType.BinaryClassification,
-    # )
 
 
 @app.command("create-dataset")
@@ -213,14 +184,12 @@ def create_dataset(
     species_id: int = typer.Option(..., "--species-id", "-s"),
     modelling_type: str = typer.Option(..., "--modelling_type", "-m"),
     ps_generator_type: str = typer.Option(..., "--ps-generator-type", "-t"),
-    ps_proportion: float = typer.Option(..., "--ps-proportion", "-p"),
 ):
     modelling_type = modellling_type_selector(modelling_type)
 
     create_dataset_by_specie(
         species_id=species_id,
         ps_generator_type=ps_generator_type,
-        ps_proportion=ps_proportion,
         modelling_type=modelling_type,
     )
 
