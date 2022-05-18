@@ -18,6 +18,7 @@ from .dataset_builder.occurrence_dataset_builder import OccurrancesDatasetBuilde
 from .dataset_builder.pseudo_absense_dataset_builder import PseudoAbsensesDatasetBuilder
 from .dataset_builder.scaler import MinMaxScalerWrapper
 
+
 class DatasetCreationJob:
     """
     [Create a dataset with species and pseudo spescies for SDM Machine Learning]
@@ -38,7 +39,7 @@ class DatasetCreationJob:
         self.ps_generator_type = ps_generator_type
         self.modelling_type = modelling_type
         self.random_state = 42
-        self.k_splits = 5 # controls train-test proportion
+        self.k_splits = 5  # controls train-test proportion
 
         self.__setup()
 
@@ -83,10 +84,8 @@ class DatasetCreationJob:
         return scaled_occ_df, coords_occ_df
 
     def __create_psa_df(
-            self,
-            scaled_train_occ_df:pd.DataFrame,
-            number_pseudo_absenses:int
-        ):
+        self, scaled_train_occ_df: pd.DataFrame, number_pseudo_absenses: int
+    ):
 
         self.psa_dataset_builder = PseudoAbsensesDatasetBuilder(
             root_data_dirpath=self.root_data_dirpath,
@@ -104,76 +103,111 @@ class DatasetCreationJob:
 
         return scaled_psa_df, coords_psa_df
 
-    def __create_test_datasets(self, fold_data_dict:Dict):
+    def __create_test_datasets(self, fold_data_dict: Dict):
         scaled_test_df = pd.concat(
-            [fold_data_dict["scaled_test_occ_df"], fold_data_dict["scaled_test_psa_df"]], ignore_index=True
+            [
+                fold_data_dict["scaled_test_occ_df"],
+                fold_data_dict["scaled_test_psa_df"],
+            ],
+            ignore_index=True,
         )
 
         coords_test_df = pd.concat(
-            [fold_data_dict["coords_test_occ_df"], fold_data_dict["coords_test_psa_df"]], ignore_index=True
+            [
+                fold_data_dict["coords_test_occ_df"],
+                fold_data_dict["coords_test_psa_df"],
+            ],
+            ignore_index=True,
         )
 
         return scaled_test_df, coords_test_df
 
-    def __create_binary_classification_dataset(self, fold_data_dict:Dict):
+    def __create_binary_classification_dataset(self, fold_data_dict: Dict):
         scaled_train_df = pd.concat(
-            [fold_data_dict["scaled_train_occ_df"], fold_data_dict["scaled_train_psa_df"]], ignore_index=True
+            [
+                fold_data_dict["scaled_train_occ_df"],
+                fold_data_dict["scaled_train_psa_df"],
+            ],
+            ignore_index=True,
         )
 
         coords_train_df = pd.concat(
-            [fold_data_dict["coords_train_occ_df"], fold_data_dict["coords_train_psa_df"]], ignore_index=True
+            [
+                fold_data_dict["coords_train_occ_df"],
+                fold_data_dict["coords_train_psa_df"],
+            ],
+            ignore_index=True,
         )
 
-        scaled_test_df, coords_test_df = self.__create_test_datasets(fold_data_dict=fold_data_dict)
+        scaled_test_df, coords_test_df = self.__create_test_datasets(
+            fold_data_dict=fold_data_dict
+        )
+
+        scaled_train_df, coords_train_df = self.__shuffle_sdm_and_coords_df_sincronaly(
+            sdm_df=scaled_train_df, coords_df=coords_train_df
+        )
+        scaled_test_df, coords_test_df = self.__shuffle_sdm_and_coords_df_sincronaly(
+            sdm_df=scaled_test_df, coords_df=coords_test_df
+        )
 
         return {
-            "scaled_train_df":scaled_train_df,
-            "coords_train_df":coords_train_df,
-            "scaled_test_df":scaled_test_df,
-            "coords_test_df":coords_test_df,
+            "scaled_train_df": scaled_train_df,
+            "coords_train_df": coords_train_df,
+            "scaled_test_df": scaled_test_df,
+            "coords_test_df": coords_test_df,
         }
 
-
-    def __create_anomaly_detection_dataset(self,fold_data_dict:Dict):
+    def __create_anomaly_detection_dataset(self, fold_data_dict: Dict):
         scaled_train_df = fold_data_dict["scaled_train_occ_df"].reset_index(drop=True)
-
 
         coords_train_df = fold_data_dict["coords_train_occ_df"].reset_index(drop=True)
 
-        scaled_test_df, coords_test_df = self.__create_test_datasets(fold_data_dict=fold_data_dict)
+        scaled_test_df, coords_test_df = self.__create_test_datasets(
+            fold_data_dict=fold_data_dict
+        )
 
         return {
-            "scaled_train_df":scaled_train_df,
-            "coords_train_df":coords_train_df,
-            "scaled_test_df":scaled_test_df,
-            "coords_test_df":coords_test_df,
+            "scaled_train_df": scaled_train_df,
+            "coords_train_df": coords_train_df,
+            "scaled_test_df": scaled_test_df,
+            "coords_test_df": coords_test_df,
         }
 
+    def __shuffle_sdm_and_coords_df_sincronaly(
+        self, sdm_df: pd.DataFrame, coords_df: pd.DataFrame
+    ):
+        sdm_df = sdm_df.sample(frac=1)
+        coords_df = coords_df.iloc[list(sdm_df.index)]
+        sdm_df = sdm_df.reset_index(drop=True)
+        coords_df = coords_df.reset_index(drop=True)
 
-    def __create_full_data(self, scaled_occ_df:pd.DataFrame, coords_occ_df:pd.DataFrame):
+        return sdm_df, coords_df
+
+    def __create_full_data(
+        self, scaled_occ_df: pd.DataFrame, coords_occ_df: pd.DataFrame
+    ):
 
         if self.modelling_type == ModellingType.AnomalyDetection:
             complete_df = scaled_occ_df
             coords_df = coords_occ_df
 
         elif self.modelling_type == ModellingType.BinaryClassification:
-            scaled_psa_df, coords_psa_df = self.__create_psa_df(scaled_train_occ_df=scaled_occ_df, number_pseudo_absenses = len(scaled_occ_df))
-            complete_df = pd.concat(
-                [scaled_occ_df, scaled_psa_df], ignore_index=True
+            scaled_psa_df, coords_psa_df = self.__create_psa_df(
+                scaled_train_occ_df=scaled_occ_df,
+                number_pseudo_absenses=len(scaled_occ_df),
             )
-            coords_df = pd.concat(
-                [coords_occ_df, coords_psa_df], ignore_index=True
-            )
+            complete_df = pd.concat([scaled_occ_df, scaled_psa_df], ignore_index=True)
+            coords_df = pd.concat([coords_occ_df, coords_psa_df], ignore_index=True)
 
+        complete_df, coords_df = self.__shuffle_sdm_and_coords_df_sincronaly(
+            sdm_df=complete_df, coords_df=coords_df
+        )
 
-        complete_df = complete_df.sample(frac=1)
-        coords_df = coords_df.iloc[list(complete_df.index)]
-        complete_df = complete_df.reset_index(drop=True)
-        coords_df = coords_df.reset_index(drop=True)
-        return complete_df, coords_df
+        vif_calculator = self.__create_vif_calculator(data=complete_df)
+        vif_df = vif_calculator.get_vif_df()
+        return complete_df, coords_df, vif_df
 
-
-    def __save(self, df:pd.DataFrame, dirname:str ,filename:str):
+    def __save(self, df: pd.DataFrame, dirname: str, filename: str):
 
         assert ".csv" in filename
         output_dirpath = self.species_dataset_path / dirname
@@ -181,27 +215,43 @@ class DatasetCreationJob:
 
         output_path = output_dirpath / filename
 
-        df.to_csv(
-            output_path, index=False
-        )
+        df.to_csv(output_path, index=False)
 
     def create_dataset(self,):
 
-        kf=KFold(n_splits=self.k_splits,shuffle=True,random_state=self.random_state)
-        scaled_occ_df, coords_occ_df  = self.__create_occ_df()
-        complete_df, coords_df = self.__create_full_data(scaled_occ_df=scaled_occ_df,coords_occ_df=coords_occ_df)
-        self.__save(df=complete_df,dirname="full_data", filename="complete_df.csv")
-        self.__save(df=coords_df,dirname="full_data", filename="coords_df.csv")
+        kf = KFold(n_splits=self.k_splits, shuffle=True, random_state=self.random_state)
+        scaled_occ_df, coords_occ_df = self.__create_occ_df()
+        complete_df, coords_df, vif_df = self.__create_full_data(
+            scaled_occ_df=scaled_occ_df, coords_occ_df=coords_occ_df
+        )
+        self.__save(df=complete_df, dirname="full_data", filename="complete_df.csv")
+        self.__save(df=coords_df, dirname="full_data", filename="coords_df.csv")
+        self.__save(df=vif_df, dirname="full_data", filename="vif_decision_df.csv")
 
         scaled_occ_df.index = scaled_occ_df.index.tolist()
         for i, (train_index, test_index) in enumerate(kf.split(scaled_occ_df)):
-            kfold_number = i +1
+            kfold_number = i + 1
 
-            scaled_train_occ_df, scaled_test_occ_df = scaled_occ_df.iloc[train_index], scaled_occ_df.iloc[test_index]
-            coords_train_occ_df, coords_test_occ_df = coords_occ_df.iloc[train_index], coords_occ_df.iloc[test_index]
-            scaled_psa_df, coords_psa_df = self.__create_psa_df(scaled_train_occ_df=scaled_train_occ_df,number_pseudo_absenses=len(scaled_occ_df))
-            scaled_train_psa_df, scaled_test_psa_df = scaled_psa_df.iloc[train_index], scaled_psa_df.iloc[test_index]
-            coords_train_psa_df, coords_test_psa_df = coords_psa_df.iloc[train_index], coords_psa_df.iloc[test_index]
+            scaled_train_occ_df, scaled_test_occ_df = (
+                scaled_occ_df.iloc[train_index],
+                scaled_occ_df.iloc[test_index],
+            )
+            coords_train_occ_df, coords_test_occ_df = (
+                coords_occ_df.iloc[train_index],
+                coords_occ_df.iloc[test_index],
+            )
+            scaled_psa_df, coords_psa_df = self.__create_psa_df(
+                scaled_train_occ_df=scaled_train_occ_df,
+                number_pseudo_absenses=len(scaled_occ_df),
+            )
+            scaled_train_psa_df, scaled_test_psa_df = (
+                scaled_psa_df.iloc[train_index],
+                scaled_psa_df.iloc[test_index],
+            )
+            coords_train_psa_df, coords_test_psa_df = (
+                coords_psa_df.iloc[train_index],
+                coords_psa_df.iloc[test_index],
+            )
 
             fold_data_dict = {}
             fold_data_dict["scaled_train_occ_df"] = scaled_train_occ_df
@@ -214,21 +264,31 @@ class DatasetCreationJob:
             fold_data_dict["coords_test_psa_df"] = coords_test_psa_df
 
             if self.modelling_type == ModellingType.AnomalyDetection:
-                fold_dataset_dict = self.__create_anomaly_detection_dataset(fold_data_dict)
+                fold_dataset_dict = self.__create_anomaly_detection_dataset(
+                    fold_data_dict
+                )
             elif self.modelling_type == ModellingType.BinaryClassification:
-                fold_dataset_dict = self.__create_binary_classification_dataset(fold_data_dict)
+                fold_dataset_dict = self.__create_binary_classification_dataset(
+                    fold_data_dict
+                )
 
-            fold_vif_dict = self.__create_vif_dataset(dataset_dict = fold_dataset_dict)
+            fold_vif_dict = self.__create_kfold_vif_dict(dataset_dict=fold_dataset_dict)
             self.__save_all_for_kfold(kfold_number, fold_dataset_dict, fold_vif_dict)
 
-    def __create_vif_dataset(self, dataset_dict:Dict):
+    def __create_vif_calculator(self, data: pd.DataFrame):
         tempdir = PathUtils.get_temp_dir()
         temp_vif_reference_df_path = tempdir / "temp.csv"
-        dataset_dict["scaled_train_df"].to_csv(temp_vif_reference_df_path, index=False)
+        data.to_csv(temp_vif_reference_df_path, index=False)
         vif_calculator = VIFCalculator(
             dataset_path=temp_vif_reference_df_path, output_column="label"
         )
         vif_calculator.calculate_vif()
+        return vif_calculator
+
+    def __create_kfold_vif_dict(self, dataset_dict: Dict):
+        vif_calculator = self.__create_vif_calculator(
+            data=dataset_dict["scaled_train_df"]
+        )
 
         vif_dict = {}
 
@@ -242,23 +302,54 @@ class DatasetCreationJob:
 
         return vif_dict
 
-    def __save_all_for_kfold(self,kfold_number:int, fold_datataset_dict:Dict, fold_vif_data_dict:Dict):
+    def __save_all_for_kfold(
+        self, kfold_number: int, fold_datataset_dict: Dict, fold_vif_data_dict: Dict
+    ):
 
         str_kfold_number = str(kfold_number)
         dirname = f"kfold{str_kfold_number}"
 
         # coords df
-        self.__save(df=fold_datataset_dict["coords_train_df"],dirname=dirname, filename="coords_train.csv")
-        self.__save(df=fold_datataset_dict["coords_test_df"],dirname=dirname, filename="coords_test.csv")
+        self.__save(
+            df=fold_datataset_dict["coords_train_df"],
+            dirname=dirname,
+            filename="coords_train.csv",
+        )
+        self.__save(
+            df=fold_datataset_dict["coords_test_df"],
+            dirname=dirname,
+            filename="coords_test.csv",
+        )
 
         # data df
-        self.__save(df=fold_datataset_dict["scaled_train_df"],dirname=dirname, filename="train.csv")
-        self.__save(df=fold_datataset_dict["scaled_test_df"],dirname=dirname, filename="test.csv")
+        self.__save(
+            df=fold_datataset_dict["scaled_train_df"],
+            dirname=dirname,
+            filename="train.csv",
+        )
+        self.__save(
+            df=fold_datataset_dict["scaled_test_df"],
+            dirname=dirname,
+            filename="test.csv",
+        )
 
         # vif df
-        self.__save(df=fold_vif_data_dict["train_vif_df"],dirname=dirname, filename="vif_train.csv")
-        self.__save(df=fold_vif_data_dict["test_vif_df"],dirname=dirname, filename="viftest.csv")
-        self.__save(df=fold_vif_data_dict["vif_decision_df"],dirname=dirname, filename="vif_decision_df.csv")
+        self.__save(
+            df=fold_vif_data_dict["train_vif_df"],
+            dirname=dirname,
+            filename="vif_train.csv",
+        )
+        self.__save(
+            df=fold_vif_data_dict["test_vif_df"],
+            dirname=dirname,
+            filename="vif_test.csv",
+        )
+        self.__save(
+            df=fold_vif_data_dict["vif_decision_df"],
+            dirname=dirname,
+            filename="vif_decision_df.csv",
+        )
+
 
 class DatasetCreationJobPrevious:
     """

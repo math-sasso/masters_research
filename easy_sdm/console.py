@@ -1,26 +1,21 @@
-from distutils.command.config import config
-from gc import callbacks
-import pandas as pd
 from pathlib import Path
 from typing import Optional
 
-from setuptools import setup
-from easy_sdm.enums.estimator_type import EstimatorType
-from easy_sdm.enums.raster_source import RasterSource
-from easy_sdm.ml.prediction_job import Prediction_Job
-
+import pandas as pd
 import typer
 
 from easy_sdm.download import DownloadJob
-from easy_sdm.enums import PseudoSpeciesGeneratorType, ModellingType
+from easy_sdm.enums import ModellingType, PseudoSpeciesGeneratorType
+from easy_sdm.enums.estimator_type import EstimatorType
 from easy_sdm.environment import EnvironmentCreationJob
 from easy_sdm.featuarizer import DatasetCreationJob
+from easy_sdm.ml import KfoldTrainJob, SimpleTrainJob
+from easy_sdm.ml.prediction_job import Prediction_Job
 from easy_sdm.raster_processing import RasterProcessingJob
 from easy_sdm.species_collection import SpeciesCollectionJob
-from easy_sdm.utils import PathUtils
-from easy_sdm.utils.data_loader import DatasetLoader, ShapefileLoader, PickleLoader
-from easy_sdm.ml import TrainJob
 from easy_sdm.typos import Species
+from easy_sdm.utils import PathUtils
+from easy_sdm.utils.data_loader import DatasetLoader, PickleLoader, ShapefileLoader
 
 app = typer.Typer()
 
@@ -43,6 +38,7 @@ data_dirpath = Path.cwd() / "data"
 all_algorithims_string = "mlp, gradient_boosting, ensemble_forest, xgboost, xgboostrf, tabnet, ocsvm, autoencoder"
 # estimator selection
 def estimator_type_selector(estimator_type: str):
+    estimator_type = estimator_type.lower()
     estimator_type = {
         "mlp": EstimatorType.MLP,
         "gradient_boosting": EstimatorType.GradientBoosting,
@@ -72,6 +68,7 @@ def modellling_type_selector_from_estimator(estimator_type: str):
 
 
 def modellling_type_selector(modelling_type: str):
+    modelling_type = modelling_type.lower()
     modelling_type = {
         "binary_classification": ModellingType.BinaryClassification,
         "anomaly_detection": ModellingType.AnomalyDetection,
@@ -80,9 +77,10 @@ def modellling_type_selector(modelling_type: str):
 
 
 def ps_generator_type_selector(ps_generator_type):
+    ps_generator_type = ps_generator_type.lower()
     ps_generator_type = {
-        "RSEP": PseudoSpeciesGeneratorType.RSEP,
-        "Random": PseudoSpeciesGeneratorType.Random,
+        "rsep": PseudoSpeciesGeneratorType.RSEP,
+        "random": PseudoSpeciesGeneratorType.Random,
     }.get(ps_generator_type, f"{ps_generator_type}' is not supported!")
 
     return ps_generator_type
@@ -197,7 +195,6 @@ def create_dataset(
 @app.command("create-all-species-datasets")
 def create_dataset(
     ps_generator_type: str = typer.Option(..., "--ps-generator-type", "-t"),
-    ps_proportion: float = typer.Option(..., "--ps-proportion", "-p"),
 ):
 
     for species_id, species_name in milpa_species_dict.items():
@@ -210,7 +207,6 @@ def create_dataset(
                 create_dataset_by_specie(
                     species_id=species_id,
                     ps_generator_type=ps_generator_type,
-                    ps_proportion=ps_proportion,
                     modelling_type=modelling_type,
                 )
 
@@ -231,8 +227,13 @@ def train_all_estimators(species_id: int = typer.Option(..., "--species-id", "-s
         "xgboost",
         "xgboostrf",
     ]
-    for estimator_type in working_estimators:
-        train(species_id=species_id, estimator_type=estimator_type)
+    for ps_generator_type in [PseudoSpeciesGeneratorType.RSEP]:
+        for estimator_type in working_estimators:
+            train(
+                species_id=species_id,
+                estimator_type=estimator_type,
+                ps_generator_type=ps_generator_type,
+            )
 
 
 @app.command("train")
@@ -241,10 +242,40 @@ def train(
     estimator_type: str = typer.Option(
         ..., "--estimator", "-e", help=f"Must be one between {all_algorithims_string}"
     ),
+    ps_generator_type: str = typer.Option(..., "--ps-generator-type", "-t"),
 ):
 
     estimator_type = estimator_type_selector(estimator_type)
     modelling_type = modellling_type_selector_from_estimator(estimator_type)
+    ps_generator_type = ps_generator_type_selector(ps_generator_type)
+    # useful info
+    species = Species(taxon_key=species_id, name=milpa_species_dict[species_id])
+
+    # train job
+    train_job = KfoldTrainJob(
+        data_dirpath=data_dirpath,
+        estimator_type=estimator_type,
+        modelling_type=modelling_type,
+        ps_generator_type=ps_generator_type,
+        species=species,
+    )
+
+    train_job.run_experiment(only_vif_columns=False)
+    train_job.run_experiment(only_vif_columns=True)
+
+
+@app.command("simple-train")
+def simple_train(
+    species_id: int = typer.Option(..., "--species-id", "-s"),
+    estimator_type: str = typer.Option(
+        ..., "--estimator", "-e", help=f"Must be one between {all_algorithims_string}"
+    ),
+    ps_generator_type: str = typer.Option(..., "--ps-generator-type", "-t"),
+):
+
+    estimator_type = estimator_type_selector(estimator_type)
+    modelling_type = modellling_type_selector_from_estimator(estimator_type)
+    ps_generator_type = ps_generator_type_selector(ps_generator_type)
     # useful info
     species = Species(taxon_key=species_id, name=milpa_species_dict[species_id])
     dataset_dirpath = (
@@ -266,7 +297,7 @@ def train(
     )
 
     # train job
-    train_job = TrainJob(
+    train_job = SimpleTrainJob(
         train_data_loader=train_data_loader,
         validation_data_loader=validation_data_loader,
         estimator_type=estimator_type,
@@ -303,8 +334,8 @@ def infer_map(
 @app.command("infer-all-maps")
 def infer_all_maps(species_id: int = typer.Option(..., "--species-id", "-s"),):
     import mlflow
-    from mlflow.tracking.client import MlflowClient
     from mlflow.entities import ViewType
+    from mlflow.tracking.client import MlflowClient
 
     ml_dirpath = str(Path.cwd() / "data/ml")
     mlflow.set_tracking_uri(f"file:{ml_dirpath}")

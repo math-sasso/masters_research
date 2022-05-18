@@ -1,56 +1,17 @@
 import mlflow
 import numpy as np
-import xgboost
 from easy_sdm.configs import configs
 from pathlib import Path
-from easy_sdm.enums.estimator_type import EstimatorType
 from easy_sdm.featuarizer import MinMaxScalerWrapper
 
 from easy_sdm.typos.species import Species
 from easy_sdm.utils.data_loader import (
     NumpyArrayLoader,
     RasterLoader,
-    PickleLoader,
     DatasetLoader,
 )
 from .persistance.map_results_persistance import MapResultsPersistance
-
-
-class RelevantRastersSelector:
-    def __init__(self, data_dirpath, run_id) -> None:
-        self.data_dirpath = data_dirpath
-        self.run_id = run_id
-        self.__setup_mlflow()
-        self.__setup()
-
-    def __setup_mlflow(self):
-        ml_dirpath = str(Path.cwd() / "data/ml")
-        mlflow.set_tracking_uri(f"file:{ml_dirpath}")
-
-    def __setup(self):
-        relevant_raster_list = PickleLoader(
-            self.data_dirpath / "environment/relevant_raster_list"
-        ).load_dataset()
-        experiment_dataset_path = Path(
-            mlflow.get_run(self.run_id).data.tags["experiment_dataset_path"]
-        )
-        vif_decision_df, _ = DatasetLoader(
-            experiment_dataset_path / "vif_decision_df.csv"
-        ).load_dataset()
-        self.vif_decision_columns = vif_decision_df["feature"].tolist()
-        relevant_raster_name_list = [
-            str(path).split("/")[-1].replace(".tif", "")
-            for path in relevant_raster_list
-        ]
-        self.vif_relevant_raster_list_pos = [
-            relevant_raster_name_list.index(elem) for elem in self.vif_decision_columns
-        ]
-
-    def get_vif_decision_columns(self):
-        return self.vif_decision_columns
-
-    def get_vif_relevant_raster_list_pos(self):
-        return self.vif_relevant_raster_list_pos
+from .selectors.vif_relevant_info_selector import VifRelevantInfoSelector
 
 
 class Prediction_Job:
@@ -85,24 +46,31 @@ class Prediction_Job:
         ).load_dataset()
 
         statistics_dataset, _ = DatasetLoader(
-            self.data_dirpath / "featuarizer/raster_statistics.csv"
+            self.data_dirpath / "environment/raster_statistics.csv"
         ).load_dataset()
 
         if mlflow.get_run(self.run_id).data.tags["VIF"] == "vif_columns":
-            self.relevant_raster_selector = RelevantRastersSelector(
-                data_dirpath=self.data_dirpath, run_id=self.run_id
+            self.vif_relevant_info_selector = VifRelevantInfoSelector(
+                data_dirpath=self.data_dirpath
             )
-            statistics_dataset = statistics_dataset[
-                statistics_dataset["raster_name"].isin(
-                    self.relevant_raster_selector.get_vif_decision_columns()
-                )
-            ]
+            self.vif_relevant_info_selector.build_vif_info_from_runid(
+                run_id=self.run_id
+            )
+            statistics_dataset = self.vif_relevant_info_selector.filter_vif_from_statistics(
+                statistics_dataset=statistics_dataset
+            )
 
         self.scaler = MinMaxScalerWrapper(statistics_dataset=statistics_dataset)
 
         self.idx = np.where(
             land_reference.read(1) == self.configs["mask"]["positive_mask_val"]
         )
+
+        self.history = (
+            mlflow.get_run(self.run_id).data.tags["mlflow.log-model.history"].lower()
+        )
+        self.estimator_type_text = mlflow.get_run(self.run_id).data.tags["Estimator"]
+
         self.loaded_model = None
 
     def __setup_mlflow(self):
@@ -114,13 +82,10 @@ class Prediction_Job:
         # mlflow.get_run()
         logged_model = f"runs:/{self.run_id}/{self.species.get_name_for_plots()}"
         # self.loaded_model = mlflow.pyfunc.load_model(logged_model)
-        history = (
-            mlflow.get_run(self.run_id).data.tags["mlflow.log-model.history"].lower()
-        )
 
-        if "xgboost" in history:
+        if "xgboost" in self.history:
             self.loaded_model = mlflow.xgboost.load_model(logged_model)
-        elif "tabnet" in history:
+        elif "tabnet" in self.history:
             self.loaded_model = mlflow.pytorch.load_model(logged_model)
         else:
             self.loaded_model = mlflow.sklearn.load_model(logged_model)
@@ -132,9 +97,9 @@ class Prediction_Job:
         ).load_dataset()
 
         if mlflow.get_run(self.run_id).data.tags["VIF"] == "vif_columns":
-            stacked_raster_coverages = stacked_raster_coverages[
-                self.relevant_raster_selector.get_vif_relevant_raster_list_pos()
-            ]
+            stacked_raster_coverages = self.vif_relevant_info_selector.filter_vif_from_stack(
+                stack=stacked_raster_coverages
+            )
 
         return stacked_raster_coverages
 
@@ -169,8 +134,9 @@ class Prediction_Job:
         map_persistance = MapResultsPersistance(
             species=self.species, data_dirpath=self.data_dirpath
         )
+
         output_path = map_persistance.create_result_adaptabilities_map(
-            Z=Z, run_id=self.run_id
+            Z=Z, run_id=self.run_id, estimator_type_text=self.estimator_type_text
         )
 
         with mlflow.start_run(run_id=self.run_id) as run:

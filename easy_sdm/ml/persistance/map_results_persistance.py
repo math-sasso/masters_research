@@ -51,14 +51,14 @@ class MapResultsPersistance(object):
         self.custom_cmap = custom_cmap
 
     def create_result_adaptabilities_map(
-        self, Z: np.ndarray, run_id: str,
+        self, Z: np.ndarray, run_id: str, estimator_type_text: str
     ):
 
         plt.figure(figsize=(8, 8))
 
         # Setting titles and labels
         plt.title(
-            f"Distribuição predita para a \nespécie {self.species.get_name_for_plots()}\n algoritmo",
+            f"Distribuição predita para a \nespécie {self.species.get_name_for_plots()}\n algoritmo {estimator_type_text}",
             fontsize=20,
         )
 

@@ -1,3 +1,4 @@
+import json
 import mlflow
 from typing import Dict
 from pathlib import Path
@@ -22,15 +23,27 @@ class MLFlowPersistence:
             mlflow.create_experiment(name=self.mlflow_experiment_name)
         mlflow.set_experiment(self.mlflow_experiment_name)
 
+    def __perist_and_log_artifacts(self, object, artifact_name: str):
+        artifacts_dirpath = mlflow.get_artifact_uri().replace("file://", "")
+        artifact_path = f"{artifacts_dirpath}/{artifact_name}"
+        if artifact_name.endswith("json"):
+            out_file = open(artifact_path, "w")
+            json.dump(object, out_file)
+
     def __persist_logs(self, metrics: Dict, parameters: Dict):
         print(f"Logged Parameters {parameters}")
         print(f"Logged Metrics {metrics}")
         mlflow.log_params(parameters)
         mlflow.log_metrics(metrics)
-        # mlflow.log_artifact('roi_features.csv', artifact_path='features')
 
     def persist(
-        self, model: BaseEstimator, metrics: Dict, parameters: Dict, vif: str, end=True
+        self,
+        model: BaseEstimator,
+        metrics: Dict,
+        parameters: Dict,
+        vif: str,
+        end=True,
+        kfold_metrics: Dict = None,
     ):
 
         if mlflow.active_run():
@@ -43,6 +56,11 @@ class MLFlowPersistence:
         mlflow.set_tag("experiment_dataset_path", self.experiment_featurizer_path)
         mlflow.set_tag("VIF", vif)
         mlflow.set_tag("run ID", run_id)
+
+        if kfold_metrics != None:
+            self.__perist_and_log_artifacts(
+                object=kfold_metrics, artifact_name="kfold_metrics.json"
+            )
 
         self.__persist_logs(metrics, parameters)
 
