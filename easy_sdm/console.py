@@ -1,7 +1,6 @@
 from pathlib import Path
 from typing import Optional
 
-import pandas as pd
 import typer
 
 from easy_sdm.download import DownloadJob
@@ -15,7 +14,7 @@ from easy_sdm.raster_processing import RasterProcessingJob
 from easy_sdm.species_collection import SpeciesCollectionJob
 from easy_sdm.typos import Species
 from easy_sdm.utils import PathUtils
-from easy_sdm.utils.data_loader import DatasetLoader, PickleLoader, ShapefileLoader
+from easy_sdm.utils.data_loader import DatasetLoader, ShapefileLoader
 
 app = typer.Typer()
 
@@ -328,7 +327,11 @@ def infer_map(
     )
     prediction_job.set_model()
     Z = prediction_job.map_prediction()
-    prediction_job.log_map(Z=Z)
+    prediction_job.log_map_with_coords(Z=Z)
+    import pdb
+
+    pdb.set_trace()
+    prediction_job.log_map_without_coords(Z=Z)
 
 
 @app.command("infer-all-maps")

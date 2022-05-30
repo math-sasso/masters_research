@@ -36,9 +36,6 @@ class KfoldTrainJob:
 
         self.experiment_dataset_path = data_dirpath / species.get_name_for_paths()
 
-    def __build_empty_folders(self, path: Path):
-        raise NotImplementedError()
-
     def __select_etimator(self):
         estimator_selector = EstimatorSelector(self.estimator_type)
         estimator_selector.select_estimator()
@@ -94,12 +91,10 @@ class KfoldTrainJob:
             X_train_df = complete_X_train_df
 
         # SETUP MLFLOW
-        experiment_featurizer_path = full_data_dataloader.dataset_path.parent
+        self.experiment_featurizer_path = full_data_dataloader.dataset_path.parent
 
         mlflow_experiment_name = self.species.get_name_for_plots()
-        self.mlflow_persister = MLFlowPersistence(
-            mlflow_experiment_name, experiment_featurizer_path
-        )
+        self.mlflow_persister = MLFlowPersistence(mlflow_experiment_name)
 
         return X_train_df, y_train_df
 
@@ -130,15 +125,13 @@ class KfoldTrainJob:
         )
         return dataset_dirpath
 
-    def __persist(
-        self, model, average_metrics, parameters, kfold_metrics, columns_considered
-    ):
+    def __persist(self, model, average_metrics, parameters, kfold_metrics, tags):
 
         self.mlflow_persister.persist(
             model=model,
             metrics=average_metrics,
             parameters=parameters,
-            vif=columns_considered,
+            tags=tags,
             kfold_metrics=kfold_metrics,
         )
 
@@ -192,12 +185,19 @@ class KfoldTrainJob:
         kfold_metrics = self.__kfold_experiment(only_vif_columns)
         average_metrics = self.__calculate_average_metrics(kfold_metrics)
         self.__full_data_experiment(only_vif_columns)
+
+        tags = {
+            "vif": self.columns_considered,
+            "experiment_featurizer_path": self.experiment_featurizer_path,
+            "ps_generator_type": self.ps_generator_type.name,
+        }
+
         self.__persist(
             model=self.estimator,
             parameters=self.estimator_parameters,
             average_metrics=average_metrics,
+            tags=tags,
             kfold_metrics=kfold_metrics,
-            columns_considered=self.columns_considered,
         )
 
     def __reset(self):

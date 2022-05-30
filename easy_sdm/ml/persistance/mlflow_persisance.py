@@ -7,9 +7,8 @@ from easy_sdm.ml.models.base import BaseEstimator
 
 
 class MLFlowPersistence:
-    def __init__(self, mlflow_experiment_name: str, experiment_featurizer_path) -> None:
+    def __init__(self, mlflow_experiment_name: str) -> None:
         self.mlflow_experiment_name = mlflow_experiment_name
-        self.experiment_featurizer_path = experiment_featurizer_path
         self.__setup_mlflow()
         self.__set_experiment()
 
@@ -41,7 +40,7 @@ class MLFlowPersistence:
         model: BaseEstimator,
         metrics: Dict,
         parameters: Dict,
-        vif: str,
+        tags: Dict,
         end=True,
         kfold_metrics: Dict = None,
     ):
@@ -52,10 +51,9 @@ class MLFlowPersistence:
         run = mlflow.start_run()
         run_id = run.info.run_id
 
-        mlflow.set_tag("Estimator", model.estimator_name)
-        mlflow.set_tag("experiment_dataset_path", self.experiment_featurizer_path)
-        mlflow.set_tag("VIF", vif)
-        mlflow.set_tag("run ID", run_id)
+        tags["Estimator"] = model.estimator_name
+        tags["run ID"] = run_id
+        mlflow.set_tags(tags=tags)
 
         if kfold_metrics != None:
             self.__perist_and_log_artifacts(

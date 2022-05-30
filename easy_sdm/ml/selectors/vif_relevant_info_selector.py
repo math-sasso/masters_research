@@ -23,7 +23,7 @@ class VifRelevantInfoSelector:
 
     def build_vif_info_from_runid(self, run_id: int):
         self.experiment_dataset_path = Path(
-            mlflow.get_run(run_id).data.tags["experiment_dataset_path"]
+            mlflow.get_run(run_id).data.tags["experiment_featurizer_path"]
         )
         self.__build_vif()
 

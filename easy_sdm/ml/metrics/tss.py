@@ -16,5 +16,5 @@ class TSS(BaseMetric):
         FN = cm[1][0]
         sensitivity = TP / float(TP + FN)
         specificity = TN / float(TN + FP)
-        TSS = sensitivity + specificity - 1
-        return TSS
+        tss = sensitivity + specificity - 1
+        return tss

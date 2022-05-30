@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Tuple
 
 import numpy as np
 import pandas as pd
@@ -18,6 +19,17 @@ class BasePseudoSpeciesGenerator(ABC):
     @abstractmethod
     def generate(self, number_pseudo_absenses: int):
         raise NotImplementedError()
+
+    def _find_coordinate_in_map_matrix(self, matrix_position: Tuple):
+        lat_coord = (
+            configs["maps"]["region_limits_with_security"]["north"]
+            - matrix_position[0] * configs["maps"]["resolution"]
+        )
+        long_coord = (
+            configs["maps"]["region_limits_with_security"]["west"]
+            + matrix_position[1] * configs["maps"]["resolution"]
+        )
+        return (lat_coord, long_coord)
 
 
 class RandomPseudoSpeciesGenerator(BasePseudoSpeciesGenerator):
@@ -101,13 +113,14 @@ class RSEPPseudoSpeciesGenerator(BasePseudoSpeciesGenerator):
         Z = self.__get_decision_points()
         # Save Z because takes too long to run
         x, y = np.where(Z == -1)
-        x_y_chosed = []
+        coord_chosed = []
         for _ in range(number_pseudo_absenses):
             while True:
                 random_val = np.random.randint(len(x))
                 matrix_position = (x[random_val], y[random_val])
-                if matrix_position not in x_y_chosed:
-                    x_y_chosed.append(matrix_position)
+                coord = self._find_coordinate_in_map_matrix(matrix_position)
+                if coord not in coord_chosed:
+                    coord_chosed.append(coord)
                     break
             row_values = self.stacked_raster_coverages[:, x[random_val], y[random_val]]
             pseudo_absense_row = dict(zip(self.columns, row_values))
@@ -115,6 +128,5 @@ class RSEPPseudoSpeciesGenerator(BasePseudoSpeciesGenerator):
                 pseudo_absense_row, ignore_index=True
             )
 
-        coordinates_df = pd.DataFrame(np.array(x_y_chosed), columns=["lat", "lon"])
-
+        coordinates_df = pd.DataFrame(np.array(coord_chosed), columns=["lat", "lon"])
         return pseudo_absenses_df, coordinates_df

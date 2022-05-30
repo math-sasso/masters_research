@@ -1,34 +1,34 @@
+from pathlib import Path
+
 import mlflow
 import numpy as np
 from easy_sdm.configs import configs
-from pathlib import Path
 from easy_sdm.featuarizer import MinMaxScalerWrapper
-
 from easy_sdm.typos.species import Species
-from easy_sdm.utils.data_loader import (
-    NumpyArrayLoader,
-    RasterLoader,
-    DatasetLoader,
+from easy_sdm.utils.data_loader import DatasetLoader, NumpyArrayLoader, RasterLoader
+
+from .persistance.map_results_persistance import (
+    MapResultsPersistanceWithCoords,
+    MapResultsPersistanceWithoutCoords,
 )
-from .persistance.map_results_persistance import MapResultsPersistance
 from .selectors.vif_relevant_info_selector import VifRelevantInfoSelector
 
 
 class Prediction_Job:
 
     """
-        the output directory is prepared before logging:
-        ├── output
-        │   ├── data
-        │   │   ├── data_sample.csv
-        │   │   └── data_sample.html
-        │   ├── images
-        │   │   ├── gif_sample.gif
-        │   │   └── image_sample.png
-        │   ├── maps
-        │   │   └── map_sample.geojson
-        │   └── plots
-        │       └── plot_sample.html
+    the output directory is prepared before logging:
+    ├── output
+    │   ├── data
+    │   │   ├── data_sample.csv
+    │   │   └── data_sample.html
+    │   ├── images
+    │   │   ├── gif_sample.gif
+    │   │   └── image_sample.png
+    │   ├── maps
+    │   │   └── map_sample.geojson
+    │   └── plots
+    │       └── plot_sample.html
     """
 
     def __init__(self, data_dirpath: Path, run_id: str, species: Species) -> None:
@@ -41,6 +41,8 @@ class Prediction_Job:
 
     def __setup(self):
 
+        self.tags = mlflow.get_run(self.run_id).data.tags
+
         land_reference = RasterLoader(
             self.data_dirpath / "raster_processing/region_mask.tif"
         ).load_dataset()
@@ -49,7 +51,7 @@ class Prediction_Job:
             self.data_dirpath / "environment/raster_statistics.csv"
         ).load_dataset()
 
-        if mlflow.get_run(self.run_id).data.tags["VIF"] == "vif_columns":
+        if self.tags["vif"] == "vif_columns":
             self.vif_relevant_info_selector = VifRelevantInfoSelector(
                 data_dirpath=self.data_dirpath
             )
@@ -69,7 +71,6 @@ class Prediction_Job:
         self.history = (
             mlflow.get_run(self.run_id).data.tags["mlflow.log-model.history"].lower()
         )
-        self.estimator_type_text = mlflow.get_run(self.run_id).data.tags["Estimator"]
 
         self.loaded_model = None
 
@@ -96,7 +97,7 @@ class Prediction_Job:
             self.data_dirpath / "environment/environment_stack.npy"
         ).load_dataset()
 
-        if mlflow.get_run(self.run_id).data.tags["VIF"] == "vif_columns":
+        if self.tags["vif"] == "vif_columns":
             stacked_raster_coverages = self.vif_relevant_info_selector.filter_vif_from_stack(
                 stack=stacked_raster_coverages
             )
@@ -130,15 +131,35 @@ class Prediction_Job:
         Z[Z == self.configs["maps"]["no_data_val"]] = -0.001
         return Z
 
-    def log_map(self, Z: np.ndarray):
-        map_persistance = MapResultsPersistance(
+    def log_map_without_coords(self, Z: np.ndarray):
+        map_persistance = MapResultsPersistanceWithoutCoords(
             species=self.species, data_dirpath=self.data_dirpath
         )
 
-        output_path = map_persistance.create_result_adaptabilities_map(
-            Z=Z, run_id=self.run_id, estimator_type_text=self.estimator_type_text
+        output_path = map_persistance.plot_map(
+            Z=Z,
+            estimator_type_text=self.tags["Estimator"],
+            vif_columns_identifier=self.tags["vif"],
+            experiment_dirpath=Path(self.tags["experiment_featurizer_path"]),
         )
 
+        self.__mlflow_log_artifact(output_path=output_path)
+
+    def log_map_with_coords(self, Z: np.ndarray):
+        map_persistance = MapResultsPersistanceWithCoords(
+            species=self.species, data_dirpath=self.data_dirpath
+        )
+
+        output_path = map_persistance.plot_map(
+            Z=Z,
+            estimator_type_text=self.tags["Estimator"],
+            vif_columns_identifier=self.tags["vif"],
+            experiment_dirpath=Path(self.tags["experiment_featurizer_path"]),
+        )
+
+        self.__mlflow_log_artifact(output_path=output_path)
+
+    def __mlflow_log_artifact(self, output_path):
         with mlflow.start_run(run_id=self.run_id) as run:
             mlflow.log_artifact(output_path)
 
