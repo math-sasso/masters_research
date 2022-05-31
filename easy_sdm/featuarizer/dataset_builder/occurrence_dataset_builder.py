@@ -6,6 +6,7 @@ import geopandas as gpd
 import numpy as np
 import pandas as pd
 import rasterio
+
 from easy_sdm.configs import configs
 from easy_sdm.raster_processing import RasterInfoExtractor
 from easy_sdm.species_collection import SpeciesInfoExtractor

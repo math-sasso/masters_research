@@ -5,13 +5,11 @@ from easy_sdm.featuarizer.dataset_builder.pseudo_absense_dataset_builder import 
     PseudoAbsensesDatasetBuilder,
 )
 from easy_sdm.featuarizer.dataset_builder.pseudo_species_generators import (
-    RSEPPseudoSpeciesGenerator,
-    RandomPseudoSpeciesGenerator,
     BasePseudoSpeciesGenerator,
+    RandomPseudoSpeciesGenerator,
+    RSEPPseudoSpeciesGenerator,
 )
 from easy_sdm.featuarizer.dataset_builder.scaler import MinMaxScalerWrapper
-
-
 from easy_sdm.featuarizer.dataset_creation_job import DatasetCreationJob
 
 __all__ = [

@@ -4,12 +4,13 @@ from pathlib import Path
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
+from typos import Species
+
 from easy_sdm.enums import EstimatorType
 from easy_sdm.raster_processing.processing.raster_information_extractor import (
     RasterInfoExtractor,
 )
 from easy_sdm.utils.path_utils import PathUtils
-from typos import Species
 
 
 class MapPlotter(object):

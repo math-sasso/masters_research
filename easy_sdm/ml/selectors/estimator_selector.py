@@ -1,4 +1,5 @@
 from configs import configs
+
 from easy_sdm.enums import EstimatorType
 
 from ..models import (

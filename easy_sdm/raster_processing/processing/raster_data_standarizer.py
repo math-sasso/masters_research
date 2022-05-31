@@ -2,11 +2,12 @@ from pathlib import Path
 from typing import Dict, List
 
 import numpy as np
+from scipy.interpolate import NearestNDInterpolator
+
 from easy_sdm.configs import configs
 from easy_sdm.enums import RasterSource
 from easy_sdm.utils import RasterUtils
 from easy_sdm.utils.data_loader import RasterLoader
-from scipy.interpolate import NearestNDInterpolator
 from easy_sdm.visualization.debug_plots import RasterPlotter
 
 

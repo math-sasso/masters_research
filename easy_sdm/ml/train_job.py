@@ -1,21 +1,20 @@
 from pathlib import Path, PurePath
 from typing import Dict
 
-import pandas as pd
 import numpy as np
+import pandas as pd
+
 from easy_sdm.enums import EstimatorType
 from easy_sdm.enums.modelling_type import ModellingType
 from easy_sdm.enums.pseudo_species_generators import PseudoSpeciesGeneratorType
 from easy_sdm.typos import Species
 from easy_sdm.utils import DatasetLoader
-from .selectors.estimator_selector import EstimatorSelector
-from .selectors.vif_relevant_info_selector import VifRelevantInfoSelector
-
 from easy_sdm.utils.path_utils import PathUtils
 
 from .metrics import MetricsTracker
-
 from .persistance.mlflow_persisance import MLFlowPersistence
+from .selectors.estimator_selector import EstimatorSelector
+from .selectors.vif_relevant_info_selector import VifRelevantInfoSelector
 
 
 class KfoldTrainJob:

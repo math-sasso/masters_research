@@ -1,7 +1,9 @@
 from cmath import inf
 from pathlib import Path
+
 import pandas as pd
 from statsmodels.stats.outliers_influence import variance_inflation_factor
+
 from easy_sdm.utils import DatasetLoader
 
 

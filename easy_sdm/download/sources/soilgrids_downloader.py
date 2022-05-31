@@ -1,8 +1,9 @@
 from pathlib import Path
-from easy_sdm.configs import configs
-from easy_sdm.utils import RasterLoader, PathUtils
+
 from owslib.wcs import WebCoverageService
-from easy_sdm.utils import RasterUtils
+
+from easy_sdm.configs import configs
+from easy_sdm.utils import PathUtils, RasterLoader, RasterUtils
 
 
 class SoilgridsDownloader:

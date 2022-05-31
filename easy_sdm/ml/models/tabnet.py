@@ -1,7 +1,8 @@
-from ..metrics.auc import AUC
-from ..metrics.tss import TSS
-from ..metrics.kappa import Kappa
 from pytorch_tabnet.tab_model import TabNetClassifier
+
+from ..metrics.auc import AUC
+from ..metrics.kappa import Kappa
+from ..metrics.tss import TSS
 
 
 class TabNet(TabNetClassifier):

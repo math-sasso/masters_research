@@ -1,5 +1,6 @@
-from .base import BaseMetric
 from sklearn.metrics import confusion_matrix
+
+from .base import BaseMetric
 
 
 class TSS(BaseMetric):

@@ -1,5 +1,6 @@
-from .base import BaseMetric
 from sklearn.metrics import roc_auc_score
+
+from .base import BaseMetric
 
 
 class AUC(BaseMetric):

@@ -1,5 +1,6 @@
-from .base import BaseMetric
 from sklearn.metrics import cohen_kappa_score
+
+from .base import BaseMetric
 
 
 class Kappa(BaseMetric):

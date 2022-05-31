@@ -3,12 +3,12 @@ from pathlib import Path
 from typing import List
 
 import numpy as np
+
+from easy_sdm.raster_processing import RasterInfoExtractor
 from easy_sdm.raster_processing.processing.raster_information_extractor import (
     RasterInfoExtractor,
 )
-
 from easy_sdm.utils import RasterLoader
-from easy_sdm.raster_processing import RasterInfoExtractor
 
 
 class EnverionmentLayersStacker:

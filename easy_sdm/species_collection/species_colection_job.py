@@ -1,8 +1,10 @@
 from pathlib import Path
-from .species_data.species_in_shapefile_checker import SpeciesInShapefileChecker
+
 from easy_sdm.typos import Species
-from .species_data.species_gdf_builder import SpeciesGDFBuilder
 from easy_sdm.utils import PathUtils, ShapefileLoader
+
+from .species_data.species_gdf_builder import SpeciesGDFBuilder
+from .species_data.species_in_shapefile_checker import SpeciesInShapefileChecker
 
 
 class SpeciesCollectionJob:

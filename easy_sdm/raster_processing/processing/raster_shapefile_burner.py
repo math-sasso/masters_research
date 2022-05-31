@@ -1,6 +1,6 @@
-import geopandas as gpd
 from pathlib import Path
 
+import geopandas as gpd
 import rasterio
 import rasterio.features
 

@@ -1,7 +1,7 @@
-from easy_sdm.utils import RasterLoader
-from easy_sdm.visualization.debug_plots import RasterPlotter
 from pathlib import Path
 
+from easy_sdm.utils import RasterLoader
+from easy_sdm.visualization.debug_plots import RasterPlotter
 
 raw_raster = (
     RasterLoader("data/download/raw_rasters/Soilgrids/bdod/bdod_5-15cm_mean.tif")

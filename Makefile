@@ -46,6 +46,10 @@ flake:
 black:
 	black ${project-packages}
 
+.PHONY = isort
+isort:
+	isort ${project-packages}
+
 .PHONY = code-complexity
 code-complexity:
 	radon mi --sort --json --output-file ${WORKSPACE_TMP}/mi_report.json .

@@ -1,7 +1,10 @@
 from pathlib import Path
-from .sources.soilgrids_downloader import SoilgridsDownloader
-from easy_sdm.utils import PathUtils
+
 from enums import RasterSource
+
+from easy_sdm.utils import PathUtils
+
+from .sources.soilgrids_downloader import SoilgridsDownloader
 
 
 class DownloadJob:

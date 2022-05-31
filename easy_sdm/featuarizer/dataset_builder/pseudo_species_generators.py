@@ -4,6 +4,7 @@ from typing import Tuple
 import numpy as np
 import pandas as pd
 import rasterio
+
 from easy_sdm.configs import configs
 from easy_sdm.ml import OCSVM
 

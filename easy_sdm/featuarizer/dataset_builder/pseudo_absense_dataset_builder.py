@@ -1,10 +1,11 @@
 from pathlib import Path
 
 import pandas as pd
+
 from easy_sdm.enums import PseudoSpeciesGeneratorType
+from easy_sdm.featuarizer.dataset_builder.scaler import MinMaxScalerWrapper
 from easy_sdm.utils import NumpyArrayLoader
 from easy_sdm.utils.data_loader import RasterLoader
-from easy_sdm.featuarizer.dataset_builder.scaler import MinMaxScalerWrapper
 
 from .pseudo_species_generators import RSEPPseudoSpeciesGenerator
 

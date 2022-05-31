@@ -1,8 +1,9 @@
-import mlflow
 from pathlib import Path
 
+import mlflow
 import numpy as np
 import pandas as pd
+
 from easy_sdm.utils.data_loader import DatasetLoader, PickleLoader
 
 

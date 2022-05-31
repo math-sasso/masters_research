@@ -1,9 +1,10 @@
 from pathlib import Path
+
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
-import matplotlib
 from matplotlib import cm
-from matplotlib.colors import ListedColormap, LinearSegmentedColormap
+from matplotlib.colors import LinearSegmentedColormap, ListedColormap
 
 
 class SpeciesInRasterPlotter:

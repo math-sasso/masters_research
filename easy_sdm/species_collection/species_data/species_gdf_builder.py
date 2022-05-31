@@ -4,10 +4,11 @@ from typing import Dict, Optional
 import geopandas as gpd
 import pandas as pd
 import requests
+
 from easy_sdm.configs import configs
+from easy_sdm.typos import Species
 from easy_sdm.utils import logger
 
-from easy_sdm.typos import Species
 from .species_in_shapefile_checker import SpeciesInShapefileChecker
 
 

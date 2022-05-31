@@ -10,7 +10,6 @@ from easy_sdm.raster_processing.processing.raster_shapefile_burner import (
 )
 from easy_sdm.raster_processing.raster_processing_job import RasterProcessingJob
 
-
 __all__ = [
     "RasterInfoExtractor",
     "RasterCliper",

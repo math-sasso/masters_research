@@ -1,17 +1,18 @@
 from gc import callbacks
 from pathlib import Path
 from typing import Optional
-import numpy as np
-from easy_sdm.utils.path_utils import PathUtils
 
+import numpy as np
 import typer
 
-from easy_sdm.typos import Species
 from easy_sdm.configs import configs
+from easy_sdm.eda import EDAJob
 from easy_sdm.enums import PseudoSpeciesGeneratorType
 from easy_sdm.featuarizer import DatasetCreationJob
 from easy_sdm.species_collection import SpeciesCollectionJob
-from easy_sdm.utils.data_loader import RasterLoader, ShapefileLoader, PickleLoader
+from easy_sdm.typos import Species
+from easy_sdm.utils.data_loader import PickleLoader, RasterLoader, ShapefileLoader
+from easy_sdm.utils.path_utils import PathUtils
 
 app = typer.Typer()
 
@@ -91,73 +92,6 @@ def check_processed_rasters():
                 pdb.set_trace()
 
 
-def get_species_dataframe(species_name):
-    species_name = species_name.replace(" ", "_")
-    raster_path_list_path = Path.cwd() / "data/environment/relevant_raster_list"
-    ps_proportion = 0.5
-    ps_generator_type = "RSEP"
-    raster_path_list = PickleLoader(raster_path_list_path).load_dataset()
-    ps_generator_type = {
-        "RSEP": PseudoSpeciesGeneratorType.RSEP,
-        "Random": PseudoSpeciesGeneratorType.RSEP.Random,
-    }.get(ps_generator_type, f"{ps_generator_type}' is not supported!")
-
-    featuarizer_dirpath = Path.cwd() / "data/featuarizer"
-    stacked_raster_coverages_path = (
-        Path.cwd() / "data/environment/environment_stack.npy"
-    )
-    region_mask_raster_path = Path.cwd() / "data/raster_processing/region_mask.tif"
-
-    sdm_dataset_creator = DatasetCreationJob(
-        raster_path_list=raster_path_list,
-        ps_generator_type=ps_generator_type,
-        ps_proportion=ps_proportion,
-        featuarizer_dirpath=featuarizer_dirpath,
-        region_mask_raster_path=region_mask_raster_path,
-        stacked_raster_coverages_path=stacked_raster_coverages_path,
-    )
-
-    species_gdf = ShapefileLoader(
-        shapefile_path=Path("data/species_collection") / species_name
-    ).load_dataset()
-
-    df = sdm_dataset_creator.create_dataset(species_gdf=species_gdf)
-
-    return df
-
-
-@app.command("vif-all-species")
-def vif_all_species():
-    from easy_sdm.featuarizer import VIFCalculator
-
-    tmp_vif_dirpath = Path.cwd() / "data/output/vif_analysis"
-    tmp_vif_dirpath.mkdir(parents=True, exist_ok=True)
-
-    dataset_dirpath = Path.cwd() / "data/featuarizer"
-
-    region_shapefile_path = Path.cwd() / "data/download/region_shapefile"
-    species_output_dirpath = Path.cwd() / "data/species_collection"
-    job = SpeciesCollectionJob(
-        output_dirpath=species_output_dirpath,
-        region_shapefile_path=region_shapefile_path,
-    )
-
-    for id, name in milpa_species_dict.items():
-
-        species_dict = {"id": id, "name": name}
-        job.collect_species_data(
-            Species(taxon_key=species_dict["id"], name=species_dict["name"])
-        )
-        df = get_species_dataframe(name)
-
-        df.to_csv(dataset_dirpath / f'dataset_{name.replace(" ","_")}.csv', index=False)
-        X = df.drop(["label"], axis=1)
-        vif_calculator = VIFCalculator()
-        vif_calculator.calculate_vif(X)
-        vif_df = vif_calculator.get_vif_df()
-        vif_df.to_csv(tmp_vif_dirpath / f'vif_{name.replace(" ","_")}.csv', index=False)
-
-
 def split_dataset(df):
     from sklearn.model_selection import train_test_split
 
@@ -173,10 +107,11 @@ def split_dataset(df):
 @app.command("models-comparision")
 def models_comparision():
     import pandas as pd
-    from easy_sdm.ml.models.tabnet import TabNetProxy
-    from sklearn.neural_network import MLPClassifier
     from sklearn.ensemble import GradientBoostingClassifier
     from sklearn.metrics import accuracy_score
+    from sklearn.neural_network import MLPClassifier
+
+    from easy_sdm.ml.models.tabnet import TabNetProxy
 
     df_result = pd.DataFrame(
         columns=[
@@ -287,9 +222,11 @@ def models_comparision():
         #     y_true=y_test_simplified,
         #     y_pred=clf_tabnet_simplified.predict(X_test_simplified),
         # )
-    import pdb
 
-    pdb.set_trace()
+
+@app.command("count-spcies-occurrences")
+def count_spcies_occurrences():
+    data_dirpath
 
 
 if __name__ == "__main__":

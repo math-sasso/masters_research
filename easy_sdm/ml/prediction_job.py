@@ -2,6 +2,7 @@ from pathlib import Path
 
 import mlflow
 import numpy as np
+
 from easy_sdm.configs import configs
 from easy_sdm.featuarizer import MinMaxScalerWrapper
 from easy_sdm.typos.species import Species
