@@ -1,17 +1,13 @@
-from gc import callbacks
 from pathlib import Path
 from typing import Optional
 
 import numpy as np
 import typer
 
+import json
 from easy_sdm.configs import configs
 from easy_sdm.eda import EDAJob
-from easy_sdm.enums import PseudoSpeciesGeneratorType
-from easy_sdm.featuarizer import DatasetCreationJob
-from easy_sdm.species_collection import SpeciesCollectionJob
-from easy_sdm.typos import Species
-from easy_sdm.utils.data_loader import PickleLoader, RasterLoader, ShapefileLoader
+from easy_sdm.utils.data_loader import RasterLoader
 from easy_sdm.utils.path_utils import PathUtils
 
 app = typer.Typer()
@@ -226,7 +222,11 @@ def models_comparision():
 
 @app.command("count-spcies-occurrences")
 def count_spcies_occurrences():
-    data_dirpath
+    eda_job = EDAJob(data_dirpath)
+    species_occurances_dict = eda_job.count_occurances_per_species()
+    json.dump(
+        species_occurances_dict, open(data_dirpath / "eda/spcies_occurances.json", "w")
+    )
 
 
 if __name__ == "__main__":

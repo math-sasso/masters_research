@@ -24,6 +24,7 @@ class ShapefileLoader:
         self.shapefile_path = shapefile_path
 
     def __get_shp_file(self):
+        shp_file_path = self.shapefile_path
         if not str(self.shapefile_path).endswith(".shp"):
             shp_file_path = [f for f in self.shapefile_path.glob("*.shp")][0]
         return shp_file_path
