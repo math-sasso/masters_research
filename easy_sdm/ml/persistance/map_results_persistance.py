@@ -98,12 +98,12 @@ class MapResultsPersistanceWithoutCoords(MapResultsPersistance):
         # Saving results
         plt.legend(loc="upper right")
         output_dirpath = (
-            self.data_dirpath / f"visualization/{self.species.get_name_for_paths()}"
+            self.data_dirpath
+            / f"visualization/{self.species.get_name_for_paths()}/{estimator_type_text}/{vif_columns_identifier}"
         )
+
         PathUtils.create_folder(output_dirpath)
-        output_path = (
-            output_dirpath / f"{estimator_type_text}_{vif_columns_identifier}_map.png"
-        )
+        output_path = output_dirpath / f"map_without_coords.png"
         plt.savefig(output_path)
         plt.clf()
         return output_path
@@ -143,14 +143,11 @@ class MapResultsPersistanceWithCoords(MapResultsPersistance):
 
         output_dirpath = (
             self.data_dirpath
-            / f"visualization/{self.species.get_name_for_paths()}/{estimator_type_text}_vif_columns_identifier.png"
+            / f"visualization/{self.species.get_name_for_paths()}/{estimator_type_text}/{vif_columns_identifier}"
         )
 
         PathUtils.create_folder(output_dirpath)
-        output_path = (
-            output_dirpath
-            / f"{estimator_type_text}_{vif_columns_identifier}_map_with_coords.png"
-        )
+        output_path = output_dirpath / f"map_with_coords.png"
 
         plt.figure(figsize=(8, 8))
 

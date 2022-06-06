@@ -18,7 +18,7 @@ from easy_sdm.utils.data_loader import DatasetLoader, ShapefileLoader
 
 app = typer.Typer()
 
-milpa_species_dict = {
+all_milpa_species_dict = {
     5290052: "Zea mays",
     7393329: "Cucurbita moschata",
     2874515: "Cucurbita maxima",
@@ -31,6 +31,13 @@ milpa_species_dict = {
     2932938: "Capsicum baccatum",
     8403992: "Capsicum frutescens",
     2932942: "Capsicum chinense",
+}
+
+milpa_species_dict = {
+    5290052: "Zea mays",
+    2874508: "Cucurbita pepo",
+    7587087: "Cajanus cajan",
+    2932944: "Capsicum annuum",
 }
 
 data_dirpath = Path.cwd() / "data"
@@ -202,12 +209,11 @@ def create_dataset(
             ModellingType.BinaryClassification,
             # ModellingType.AnomalyDetection,
         ]:
-            if species_id != 7587087:
-                create_dataset_by_specie(
-                    species_id=species_id,
-                    ps_generator_type=ps_generator_type,
-                    modelling_type=modelling_type,
-                )
+            create_dataset_by_specie(
+                species_id=species_id,
+                ps_generator_type=ps_generator_type,
+                modelling_type=modelling_type,
+            )
 
 
 @app.command("train-all-estimators-all-species")
@@ -224,9 +230,8 @@ def train_all_estimators(species_id: int = typer.Option(..., "--species-id", "-s
         "gradient_boosting",
         "random_forest",
         "xgboost",
-        "xgboostrf",
     ]
-    for ps_generator_type in [PseudoSpeciesGeneratorType.RSEP]:
+    for ps_generator_type in [PseudoSpeciesGeneratorType.RSEP.value]:
         for estimator_type in working_estimators:
             train(
                 species_id=species_id,
@@ -328,14 +333,31 @@ def infer_map(
     prediction_job.set_model()
     Z = prediction_job.map_prediction()
     prediction_job.log_map_with_coords(Z=Z)
-    import pdb
-
-    pdb.set_trace()
     prediction_job.log_map_without_coords(Z=Z)
 
 
-@app.command("infer-all-maps")
-def infer_all_maps(species_id: int = typer.Option(..., "--species-id", "-s"),):
+@app.command("infer-four-maps")
+def infer_four_maps(
+    species_id: int = typer.Option(..., "--species-id", "-s"),
+    run_id1: str = typer.Option(..., "--run_id1", "-r1"),
+    run_id2: str = typer.Option(..., "--run_id2", "-r2"),
+    run_id3: str = typer.Option(..., "--run_id3", "-r3"),
+    run_id4: str = typer.Option(..., "--run_id4", "-r4"),
+    organization: str = typer.Option(..., "--organization", "0"),
+):
+    pass
+
+
+@app.command("infer-all-maps-all-species")
+def infer_all_maps_all_species():
+    for specie_id, species_name in milpa_species_dict.items():
+        infer_all_maps_for_species(species_id=specie_id)
+
+
+@app.command("infer-all-maps-for-specie")
+def infer_all_maps_for_species(
+    species_id: int = typer.Option(..., "--species-id", "-s"),
+):
     import mlflow
     from mlflow.entities import ViewType
     from mlflow.tracking.client import MlflowClient
