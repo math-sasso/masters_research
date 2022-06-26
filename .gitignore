@@ -92,6 +92,6 @@ target/
 
 # Mypy cache
 .mypy_cache/
-/data
+/data*
 /wheels
 /mock_data

@@ -112,14 +112,13 @@ def version(
     typer.echo("easy_sdm")
 
 
-@app.command("download-data")
+@app.command("download")
 def download_data():
-    raw_rasters_dirpath = data_dirpath / "download/raw_rasters"
-    download_job = DownloadJob(raw_rasters_dirpath=raw_rasters_dirpath)
+    download_job = DownloadJob(data_dirpath=data_dirpath)
     # download_job.download_shapefile_region()
-    download_job.download_soigrids_rasters(coverage_filter="mean")
+    # download_job.download_soigrids_rasters(coverage_filter="mean")
     # download_job.download_bioclim_rasters()
-    # download_job.download_envirem_rasters()
+    download_job.download_envirem_rasters()
 
 
 @app.command("process-rasters")

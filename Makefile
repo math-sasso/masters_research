@@ -101,7 +101,7 @@ builder-usage:
 	s2i usage ${DOCKER_IMAGE_NAME}
 
 # git
-commit: black
+commit: black, isort
 	git add .
 	PRE_COMMIT_ALLOW_NO_CONFIG=1 git commit -m "$t" -m "$b"
 	git push
