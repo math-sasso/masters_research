@@ -254,7 +254,7 @@ class MapWithCoords(MapPersistance):
         super().__init__(data_dirpath, species, custom_cmap)
         self.experiment_dirpath = (
             self.data_dirpath
-            / f"featuarizer/datasets/{self.species.get_name_for_paths}/binary_classification/rsep/full_data"
+            / f"featuarizer/datasets/{self.species.get_name_for_paths()}/binary_classification/rsep/full_data"
         )
 
     def _extract_occurrence_coords(self):
@@ -265,6 +265,7 @@ class MapWithCoords(MapPersistance):
         sdm_df, _ = DatasetLoader(
             self.experiment_dirpath / "complete_df.csv"
         ).load_dataset()
+
         df_occ = sdm_df.loc[sdm_df["label"] == 1]
         coords_occ_df = coords_df.iloc[list(df_occ.index)]
         coords = coords_occ_df.to_numpy()
@@ -311,8 +312,8 @@ class MapWithCoords(MapPersistance):
             linestyles="solid",
         )
 
-        occ_coords = self._extract_occurrence_coords(self.experiment_dirpath)
-        psa_coords = self._extract_pseudo_absense_coords(self.experiment_dirpath)
+        occ_coords = self._extract_occurrence_coords()
+        psa_coords = self._extract_pseudo_absense_coords()
 
         plt.scatter(
             occ_coords[:, 1],
@@ -332,10 +333,9 @@ class MapWithCoords(MapPersistance):
         )
 
         # Saving results
-        plt.legend(loc="upper right", prop={"size": 18})
+        plt.legend(loc="lower left", prop={"size": 17})
         plt.savefig(output_path)
         plt.clf()
-        return output_path
 
 
 class MapWithOCSVMDecision(MapPersistance):
