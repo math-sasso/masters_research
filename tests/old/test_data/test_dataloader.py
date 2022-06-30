@@ -1,5 +1,5 @@
-import rasterio
 import geopandas as gpd
+import rasterio
 
 
 def test_species_shapefile_dataset(mock_species_shapefile_dataloader):

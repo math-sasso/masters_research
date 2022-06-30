@@ -1,4 +1,5 @@
 import pytest
+
 from easy_sdm.download import DownloadJob
 
 

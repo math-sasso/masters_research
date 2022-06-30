@@ -1,7 +1,9 @@
-import rasterio
-from easy_sdm.utils import RasterLoader
-from easy_sdm.download import SoilgridsDownloader
 from pathlib import Path
+
+import rasterio
+
+from easy_sdm.download import SoilgridsDownloader
+from easy_sdm.utils import RasterLoader
 
 
 def test_download_soilgrids(tmp_path, mock_processed_raster_path_bioclim):

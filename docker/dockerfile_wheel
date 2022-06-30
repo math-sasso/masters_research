@@ -79,7 +79,7 @@ RUN curl -sLo ~/miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-py38
 
 
 # # GDAL required pre installs
-# RUN sudo apt-get update 
+# RUN sudo apt-get update
 # RUN sudo apt-get upgrade -y
 # RUN sudo apt-get install -y software-properties-common
 # RUN sudo apt-get install build-essential
@@ -93,7 +93,7 @@ RUN curl -sLo ~/miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-py38
 # # RUN sudo apt-get install build-essential python-all-dev
 # # RUN sudo wget http://download.osgeo.org/gdal/2.2.2/gdal-2.2.2.tar.gz
 # # RUN sudo tar xvfz gdal-2.2.2.tar.gz
-# # WORKDIR gdal-2.2.2 
+# # WORKDIR gdal-2.2.2
 # # RUN ./configure --with-python
 # # RUN make
 # # RUN make install
@@ -119,4 +119,3 @@ EXPOSE 6006
 # Entrypoint
 ENTRYPOINT ["/bin/bash"]
 CMD []
-

@@ -7,12 +7,11 @@ from easy_sdm.configs import configs
 from easy_sdm.featuarizer import MinMaxScalerWrapper
 from easy_sdm.typos.species import Species
 from easy_sdm.utils.data_loader import DatasetLoader, NumpyArrayLoader, RasterLoader
-
-
 from easy_sdm.visualization.debug_plots import (
     MapResultsPersistanceWithCoords,
     MapResultsPersistanceWithoutCoords,
 )
+
 from .selectors.vif_relevant_info_selector import VifRelevantInfoSelector
 
 

@@ -4,6 +4,7 @@ from tkinter import Variable
 
 import numpy as np
 import rasterio
+
 from easy_sdm.configs import configs
 from easy_sdm.raster_processing import (
     RasterCliper,
@@ -37,8 +38,7 @@ def test_clip_raster(tmp_path, raw_rasters_dirpath):
     output_path = tmp_path / filename
     raster = RasterLoader(filepath).load_dataset()
     RasterCliper().clip_and_save(
-        source_raster=raster,
-        output_path=PathUtils.file_path_existis(output_path),
+        source_raster=raster, output_path=PathUtils.file_path_existis(output_path),
     )
     assert Path(output_path).is_file()
     assert isinstance(
@@ -48,10 +48,11 @@ def test_clip_raster(tmp_path, raw_rasters_dirpath):
 
 def test_species_inside_regions(tmp_path, mock_map_shapefile_path):
     import geopandas as gpd
+
     from easy_sdm.raster_processing import (
-        SpeciesInShapefileChecker,
         Species,
         SpeciesGDFBuilder,
+        SpeciesInShapefileChecker,
     )
 
     mays_code = 5290052
@@ -76,8 +77,7 @@ def test_standarize_soilgrids_raster(tmp_path):
     output_path = tmp_path / Path(raster_path).name
     raster_standarizer = RasterStandarizer()
     raster_standarizer.standarize_soilgrids(
-        input_path=raster_path,
-        output_path=output_path,
+        input_path=raster_path, output_path=output_path,
     )
     standarized_raster = rasterio.open(output_path)
 

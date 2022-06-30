@@ -1,6 +1,7 @@
-import rasterio
 import geopandas as gpd
-from easy_sdm.utils import ShapefileLoader, RasterLoader
+import rasterio
+
+from easy_sdm.utils import RasterLoader, ShapefileLoader
 
 
 def test_shapefile_loader(mock_map_shapefile_path):

@@ -1,4 +1,5 @@
 import rasterio
+
 from easy_sdm.enums import RasterSource
 from easy_sdm.raster_processing import RasterProcessingJob
 from easy_sdm.utils import RasterLoader
@@ -8,9 +9,7 @@ def test_raster_processing_job(root_test_data_path):
 
     processed_rasters_dir = root_test_data_path / "raster_processing"
 
-    raster_processing_job = RasterProcessingJob(
-        data_dirpath=root_test_data_path
-    )
+    raster_processing_job = RasterProcessingJob(data_dirpath=root_test_data_path)
 
     raster_processing_job.process_rasters_from_source(RasterSource.Bioclim)
     raster_processing_job.process_rasters_from_source(RasterSource.Soilgrids)

@@ -1,12 +1,12 @@
 def test_species_request(tmp_path, mock_map_shapefile_path):
+    import geopandas as gpd
+
     from easy_sdm.raster_processing import (
+        ShapefileLoader,
         Species,
         SpeciesGDFBuilder,
         SpeciesInShapefileChecker,
-        ShapefileLoader,
     )
-
-    import geopandas as gpd
 
     mays_code = 5290052
     output_path = tmp_path / "Zea_mays/Zea_mays.shp"

@@ -1,13 +1,15 @@
 from pathlib import Path
-from easy_sdm.utils import ShapefileLoader, RasterLoader
+
+import numpy as np
+from configs import configs
+
+from easy_sdm.typos import Species
+from easy_sdm.utils import RasterLoader, ShapefileLoader
 from easy_sdm.utils.path_utils import PathUtils
 from easy_sdm.visualization.debug_plots import (
     EnvironmentVariablesMapPlotter,
     MapWithCoords,
 )
-from configs import configs
-import numpy as np
-from easy_sdm.typos import Species
 
 
 class EDAJob:

@@ -1,10 +1,10 @@
+import json
 from pathlib import Path
 from typing import Optional
 
 import numpy as np
 import typer
 
-import json
 from easy_sdm.configs import configs
 from easy_sdm.eda import EDAJob
 from easy_sdm.utils.data_loader import RasterLoader

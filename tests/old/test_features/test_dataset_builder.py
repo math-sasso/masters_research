@@ -1,11 +1,7 @@
 from pathlib import Path
 
-
-from pathlib import Path
-
 from easy_sdm.featuarizer import OccurrancesDatasetBuilder
 from easy_sdm.utils import PathUtils, ShapefileLoader
-
 
 # def test_extract_occurances(mock_species_shapefile_path, processed_raster_paths_list):
 

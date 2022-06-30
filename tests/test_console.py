@@ -4,23 +4,21 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import rasterio
-from easy_sdm.raster_processing import RasterStandarizer, ShapefileLoader
+
+from easy_sdm.configs import configs
 from easy_sdm.data_colector import burn_shapefile_in_raster, standarize_rasters
 from easy_sdm.dataset_creation import (
     OccurrancesDatasetBuilder,
-    SDMDatasetCreator,
     RasterStatisticsCalculator,
+    SDMDatasetCreator,
+)
+from easy_sdm.raster_processing import (
+    RasterInfoExtractor,
+    RasterLoader,
+    RasterStandarizer,
+    ShapefileLoader,
 )
 from easy_sdm.utils import PathUtils
-from easy_sdm.configs import configs
-
-
-from pathlib import Path
-
-import numpy as np
-import rasterio
-from easy_sdm.raster_processing import RasterInfoExtractor, RasterLoader
-from easy_sdm.data_colector import burn_shapefile_in_raster, standarize_rasters
 
 
 def test_standarize_rasters(tmp_path, raw_rasters_dirpath):

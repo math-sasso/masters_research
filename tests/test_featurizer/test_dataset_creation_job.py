@@ -1,15 +1,14 @@
 import pytest
+
+from easy_sdm.enums import ModellingType, PseudoSpeciesGeneratorType
 from easy_sdm.featuarizer import DatasetCreationJob
-from easy_sdm.enums import PseudoSpeciesGeneratorType, ModellingType
 from easy_sdm.utils.data_loader import DatasetLoader, ShapefileLoader
 
 
 @pytest.fixture
 def dataset_creation_job(root_test_data_path):
 
-    return DatasetCreationJob(
-        root_data_dirpath=root_test_data_path,
-    )
+    return DatasetCreationJob(root_data_dirpath=root_test_data_path,)
 
 
 def test_create_binary_classification_dataset(
@@ -36,10 +35,16 @@ def test_create_binary_classification_dataset(
     )
 
     assert (
-        DatasetLoader(dataset_path=binary_classification_folder / "train.csv",output_column="label")
+        DatasetLoader(
+            dataset_path=binary_classification_folder / "train.csv",
+            output_column="label",
+        )
         .load_dataset()[0]
         .shape[1]
-        == DatasetLoader(dataset_path=binary_classification_folder / "train_coords.csv",output_column="")
+        == DatasetLoader(
+            dataset_path=binary_classification_folder / "train_coords.csv",
+            output_column="",
+        )
         .load_dataset()[0]
         .shape[1]
     )
