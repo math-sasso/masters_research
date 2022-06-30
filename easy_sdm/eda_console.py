@@ -27,6 +27,12 @@ milpa_species_dict = {
     8403992: "Capsicum frutescens",
     2932942: "Capsicum chinense",
 }
+milpa_species_dict = {
+    5290052: "Zea mays",
+    2874508: "Cucurbita pepo",
+    7587087: "Cajanus cajan",
+    2932944: "Capiscum annuum",
+}
 
 data_dirpath = Path.cwd() / "data"
 
@@ -220,13 +226,34 @@ def models_comparision():
         # )
 
 
+EDA_JOB = EDAJob(data_dirpath)
+
+
 @app.command("count-spcies-occurrences")
 def count_spcies_occurrences():
-    eda_job = EDAJob(data_dirpath)
-    species_occurances_dict = eda_job.count_occurances_per_species()
+
+    species_occurances_dict = EDA_JOB.count_occurances_per_species()
     json.dump(
         species_occurances_dict, open(data_dirpath / "eda/spcies_occurances.json", "w")
     )
+
+
+@app.command("verify-processed-rasters")
+def verify_processed_rasters():
+    dict_varialbes = EDA_JOB.verify_processed_rasters()
+    json.dump(
+        dict_varialbes, open(data_dirpath / "eda/value_counts_per_raster.json", "w")
+    )
+
+
+@app.command("save-plots-processed-rasters")
+def save_plots_processed_rasters():
+    EDA_JOB.save_plots_processed_rasters()
+
+
+@app.command("save-points-in-blank-map")
+def save_plots_processed_rasters():
+    EDA_JOB.save_plots_points_in_blank_map(milpa_species_dict)
 
 
 if __name__ == "__main__":

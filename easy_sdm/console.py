@@ -37,7 +37,7 @@ milpa_species_dict = {
     5290052: "Zea mays",
     2874508: "Cucurbita pepo",
     7587087: "Cajanus cajan",
-    2932944: "Capsicum annuum",
+    2932944: "Capiscum annuum",
 }
 
 data_dirpath = Path.cwd() / "data"
@@ -332,26 +332,8 @@ def infer_map(
     )
     prediction_job.set_model()
     Z = prediction_job.map_prediction()
-    prediction_job.log_map_with_coords(Z=Z)
+    # prediction_job.log_map_with_coords(Z=Z)
     prediction_job.log_map_without_coords(Z=Z)
-
-
-@app.command("infer-four-maps")
-def infer_four_maps(
-    species_id: int = typer.Option(..., "--species-id", "-s"),
-    run_id1: str = typer.Option(..., "--run_id1", "-r1"),
-    run_id2: str = typer.Option(..., "--run_id2", "-r2"),
-    run_id3: str = typer.Option(..., "--run_id3", "-r3"),
-    run_id4: str = typer.Option(..., "--run_id4", "-r4"),
-    organization: str = typer.Option(..., "--organization", "0"),
-):
-    pass
-
-
-@app.command("infer-all-maps-all-species")
-def infer_all_maps_all_species():
-    for specie_id, species_name in milpa_species_dict.items():
-        infer_all_maps_for_species(species_id=specie_id)
 
 
 @app.command("infer-all-maps-for-specie")
@@ -378,14 +360,10 @@ def infer_all_maps_for_species(
         infer_map(species_id=species.taxon_key, run_id=run_id)
 
 
-@app.command("generate-results")
-def generate_results(
-    species_id: int = typer.Option(..., "--species-id", "-s"),
-    map_generation: str = typer.Option(..., "--map-generation", "-mg"),
-    model_comparison: bool = typer.Option(..., "--model-comparison", "-mc"),
-    estimator_type: str = typer.Option(..., "--estimator", "-e"),
-):
-    pass
+@app.command("infer-all-maps-all-species")
+def infer_all_maps_all_species():
+    for specie_id, species_name in milpa_species_dict.items():
+        infer_all_maps_for_species(species_id=specie_id)
 
 
 if __name__ == "__main__":

@@ -124,11 +124,11 @@ class KfoldTrainJob:
         )
         return dataset_dirpath
 
-    def __persist(self, model, average_metrics, parameters, kfold_metrics, tags):
+    def __persist(self, model, metrics_statistics, parameters, kfold_metrics, tags):
 
         self.mlflow_persister.persist(
             model=model,
-            metrics=average_metrics,
+            metrics=metrics_statistics,
             parameters=parameters,
             tags=tags,
             kfold_metrics=kfold_metrics,
@@ -164,8 +164,8 @@ class KfoldTrainJob:
         )
         self.__fit(X_train_df, y_train_df)
 
-    def __calculate_average_metrics(self, kfold_metrics: Dict):
-        average_metrics = {}
+    def __calculate_metrics_statistics(self, kfold_metrics: Dict):
+        metrics_statistics = {}
         auc_list = []
         kappa_list = []
         tss_list = []
@@ -174,15 +174,19 @@ class KfoldTrainJob:
             kappa_list.append(metrics["kappa"])
             tss_list.append(metrics["tss"])
 
-        average_metrics["auc"] = np.mean(auc_list)
-        average_metrics["kappa"] = np.mean(kappa_list)
-        average_metrics["tss"] = np.mean(tss_list)
+        metrics_statistics["auc_mean"] = np.mean(auc_list)
+        metrics_statistics["kappa_mean"] = np.mean(kappa_list)
+        metrics_statistics["tss_mean"] = np.mean(tss_list)
 
-        return average_metrics
+        metrics_statistics["auc_std"] = np.std(auc_list)
+        metrics_statistics["kappa_std"] = np.std(kappa_list)
+        metrics_statistics["tss_std"] = np.std(tss_list)
+
+        return metrics_statistics
 
     def run_experiment(self, only_vif_columns: bool):
         kfold_metrics = self.__kfold_experiment(only_vif_columns)
-        average_metrics = self.__calculate_average_metrics(kfold_metrics)
+        metrics_statistics = self.__calculate_metrics_statistics(kfold_metrics)
         self.__full_data_experiment(only_vif_columns)
 
         tags = {
@@ -194,7 +198,7 @@ class KfoldTrainJob:
         self.__persist(
             model=self.estimator,
             parameters=self.estimator_parameters,
-            average_metrics=average_metrics,
+            metrics_statistics=metrics_statistics,
             tags=tags,
             kfold_metrics=kfold_metrics,
         )

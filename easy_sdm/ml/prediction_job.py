@@ -8,7 +8,8 @@ from easy_sdm.featuarizer import MinMaxScalerWrapper
 from easy_sdm.typos.species import Species
 from easy_sdm.utils.data_loader import DatasetLoader, NumpyArrayLoader, RasterLoader
 
-from .persistance.map_results_persistance import (
+
+from easy_sdm.visualization.debug_plots import (
     MapResultsPersistanceWithCoords,
     MapResultsPersistanceWithoutCoords,
 )
