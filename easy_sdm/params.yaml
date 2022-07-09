@@ -22,7 +22,7 @@ gbif:
   one_request_limit: 300
   has_coordinate: True
   low_year: 2000
-  up_year: 2021
+  up_year: 2022
   drop_duplicates: True
   try_override_species_data: True
   country: "BR"
@@ -31,10 +31,11 @@ species:
   id: 7587087
   name: "Cajanus cajan"
 
+# https://stats.stackexchange.com/questions/347185/what-is-the-parameter-nu-in-oneclass-svm
 OCSVM:
   kernel: 'rbf'
-  gamma: 'auto'
-  nu: 0.01
+  gamma: 'scale'
+  nu: 0.5
 
 model:
   binary_classification:

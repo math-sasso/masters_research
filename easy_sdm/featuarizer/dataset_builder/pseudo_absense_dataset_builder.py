@@ -77,5 +77,5 @@ class PseudoAbsensesDatasetBuilder:
     def get_coordinates_df(self):
         return self.coordinates_df
 
-    def save_decision_map(self):
-        raise NotImplementedError()
+    def get_psa_decision_map(self):
+        return self.ps_generator.get_psa_decision_map()

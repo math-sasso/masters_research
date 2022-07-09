@@ -3,6 +3,7 @@ from typing import Dict, List
 
 import geopandas as gpd
 import pandas as pd
+import numpy as np
 from sklearn.model_selection import KFold, train_test_split
 
 from easy_sdm.enums import ModellingType, PseudoSpeciesGeneratorType
@@ -93,13 +94,14 @@ class DatasetCreationJob:
         )
 
         self.psa_dataset_builder.build(number_pseudo_absenses=number_pseudo_absenses)
+        psa_decision_map = self.psa_dataset_builder.get_psa_decision_map()
 
         psa_df = self.psa_dataset_builder.get_dataset()
         coords_psa_df = self.psa_dataset_builder.get_coordinates_df()
 
         scaled_psa_df = self.min_max_scaler.scale_df(psa_df)
 
-        return scaled_psa_df, coords_psa_df
+        return scaled_psa_df, coords_psa_df, psa_decision_map
 
     def __create_test_datasets(self, fold_data_dict: Dict):
         scaled_test_df = pd.concat(
@@ -190,7 +192,7 @@ class DatasetCreationJob:
             coords_df = coords_occ_df
 
         elif self.modelling_type == ModellingType.BinaryClassification:
-            scaled_psa_df, coords_psa_df = self.__create_psa_df(
+            scaled_psa_df, coords_psa_df, psa_decision_map = self.__create_psa_df(
                 scaled_train_occ_df=scaled_occ_df,
                 number_pseudo_absenses=len(scaled_occ_df),
             )
@@ -203,7 +205,7 @@ class DatasetCreationJob:
 
         vif_calculator = self.__create_vif_calculator(data=complete_df)
         vif_df = vif_calculator.get_vif_df()
-        return complete_df, coords_df, vif_df
+        return complete_df, coords_df, vif_df, psa_decision_map
 
     def __save(self, df: pd.DataFrame, dirname: str, filename: str):
 
@@ -215,12 +217,30 @@ class DatasetCreationJob:
 
         df.to_csv(output_path, index=False)
 
+    def __save_array(self, np_array: np.ndarray, dirname: str, filename: str):
+
+        assert ".npy" in filename
+        output_dirpath = self.species_dataset_path / dirname
+        output_dirpath.mkdir(parents=True, exist_ok=True)
+
+        output_path = output_dirpath / filename
+
+        with open(output_path, "wb") as f:
+            np.save(f, np_array)
+
+        del np_array
+
     def create_dataset(self,):
 
         kf = KFold(n_splits=self.k_splits, shuffle=True, random_state=self.random_state)
         scaled_occ_df, coords_occ_df = self.__create_occ_df()
-        complete_df, coords_df, vif_df = self.__create_full_data(
+        complete_df, coords_df, vif_df, psa_decision_map = self.__create_full_data(
             scaled_occ_df=scaled_occ_df, coords_occ_df=coords_occ_df
+        )
+        self.__save_array(
+            np_array=psa_decision_map,
+            dirname="full_data",
+            filename="psa_decision_map.npy",
         )
         self.__save(df=complete_df, dirname="full_data", filename="complete_df.csv")
         self.__save(df=coords_df, dirname="full_data", filename="coords_df.csv")
@@ -238,7 +258,7 @@ class DatasetCreationJob:
                 coords_occ_df.iloc[train_index],
                 coords_occ_df.iloc[test_index],
             )
-            scaled_psa_df, coords_psa_df = self.__create_psa_df(
+            scaled_psa_df, coords_psa_df, _ = self.__create_psa_df(
                 scaled_train_occ_df=scaled_train_occ_df,
                 number_pseudo_absenses=len(scaled_occ_df),
             )

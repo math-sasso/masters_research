@@ -129,8 +129,14 @@ def process_rasters():
     raster_processing_job.process_rasters_from_all_sources()
 
 
-@app.command("build-species-data")
-def build_species_data(species_id: int = typer.Option(..., "--species-id", "-s"),):
+@app.command("create-all-species-data")
+def create_all_species_data():
+    for specie_id, species_name in milpa_species_dict.items():
+        create_species_data(species_id=specie_id)
+
+
+@app.command("create-species-data")
+def create_species_data(species_id: int = typer.Option(..., "--species-id", "-s"),):
     output_dirpath = data_dirpath / "species_collection"
     region_shapefile_path = data_dirpath / "download/region_shapefile"
     species = Species(taxon_key=species_id, name=milpa_species_dict[species_id])

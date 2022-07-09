@@ -5,6 +5,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import cm
+from easy_sdm.utils.data_loader import NumpyArrayLoader
 from raster_processing import RasterInfoExtractor
 from typos import Species
 
@@ -35,8 +36,10 @@ def result_colormap():
 def ocsvm_decision_colormap():
     norm = matplotlib.colors.Normalize(-0.001, 1)
     colors = [
-        [norm(-1), "red"],
-        [norm(1), "blue"],
+        [norm(-0.001), "white"],
+        [norm(0.1), "0.95"],
+        [norm(0.5), "red"],
+        [norm(1.0), "blue"],
     ]
 
     custom_cmap = matplotlib.colors.LinearSegmentedColormap.from_list("", colors)
@@ -135,7 +138,6 @@ class MapResultsPersistanceWithoutCoords(MapPersistance):
             linestyles="solid",
         )
 
-        # print('levels: ',levels)
         plt.contourf(self.X, self.Y, Z, levels=10, cmap=self.custom_cmap)
 
         clb = plt.colorbar(format="%.2f")
@@ -340,12 +342,15 @@ class MapWithCoords(MapPersistance):
 
 class MapWithOCSVMDecision(MapPersistance):
     def __init__(
-        self, data_dirpath: Path, species: Union[Species, None], custom_cmap=None
+        self,
+        data_dirpath: Path,
+        species: Union[Species, None],
+        custom_cmap=ocsvm_decision_colormap(),
     ) -> None:
         super().__init__(data_dirpath, species, custom_cmap)
         self.experiment_dirpath = (
             self.data_dirpath
-            / f"featuarizer/datasets/{self.species.get_name_for_paths}/binary_classification/rsep/full_data"
+            / f"featuarizer/datasets/{self.species.get_name_for_paths()}/binary_classification/rsep/full_data"
         )
 
     def plot_map(self,):
@@ -368,6 +373,13 @@ class MapWithOCSVMDecision(MapPersistance):
         plt.xticks(fontsize=20)
         plt.yticks(fontsize=20)
 
+        Z = NumpyArrayLoader(
+            self.experiment_dirpath / "psa_decision_map.npy"
+        ).load_dataset()
+        Z[Z == -9999.0] = -0.001
+        Z[Z == -1] = 0.5
+
+        plt.contourf(self.X, self.Y, Z, levels=10, cmap=self.custom_cmap)
         # Plot country map
         plt.contour(
             self.X,

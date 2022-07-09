@@ -7,6 +7,7 @@ import rasterio
 
 from easy_sdm.configs import configs
 from easy_sdm.ml import OCSVM
+from pathlib import Path
 
 
 class BasePseudoSpeciesGenerator(ABC):
@@ -72,8 +73,9 @@ class RSEPPseudoSpeciesGenerator(BasePseudoSpeciesGenerator):
         scaled_occurrence_df = scaled_occurrence_df.drop("label", axis=1)
         self.ocsvm.fit(X_train=scaled_occurrence_df.values)
         self.columns = scaled_occurrence_df.columns
+        self.__create_decition_points()
 
-    def __get_decision_points(self):
+    def __create_decition_points(self):
         """[
 
             Z will be a 2D array with 3 possible values:
@@ -107,13 +109,12 @@ class RSEPPseudoSpeciesGenerator(BasePseudoSpeciesGenerator):
         Z[
             self.inside_mask_idx[0], self.inside_mask_idx[1]
         ] = predicted_anomaly_detection
-        return Z
+        self.Z = Z
 
     def generate(self, number_pseudo_absenses: int):
         pseudo_absenses_df = pd.DataFrame(columns=self.columns)
-        Z = self.__get_decision_points()
         # Save Z because takes too long to run
-        x, y = np.where(Z == -1)
+        x, y = np.where(self.Z == -1)
         coord_chosed = []
         for _ in range(number_pseudo_absenses):
             while True:
@@ -131,3 +132,6 @@ class RSEPPseudoSpeciesGenerator(BasePseudoSpeciesGenerator):
 
         coordinates_df = pd.DataFrame(np.array(coord_chosed), columns=["lat", "lon"])
         return pseudo_absenses_df, coordinates_df
+
+    def get_psa_decision_map(self):
+        return self.Z

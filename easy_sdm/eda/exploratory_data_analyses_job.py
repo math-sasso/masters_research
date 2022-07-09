@@ -9,6 +9,7 @@ from easy_sdm.utils.path_utils import PathUtils
 from easy_sdm.visualization.debug_plots import (
     EnvironmentVariablesMapPlotter,
     MapWithCoords,
+    MapWithOCSVMDecision,
 )
 
 
@@ -25,6 +26,14 @@ class EDAJob:
             dict_species[species_name] = len(species_gdf)
 
         return dict_species
+
+    def save_ocsvm_decision_map(self, milpa_species_dict):
+        for species_id, species_name in milpa_species_dict.items():
+            species = Species(taxon_key=species_id, name=species_name)
+            map_with_coords = MapWithOCSVMDecision(
+                data_dirpath=self.data_dirpath, species=species
+            )
+            map_with_coords.plot_map()
 
     def save_plots_points_in_blank_map(self, milpa_species_dict):
         for species_id, species_name in milpa_species_dict.items():
